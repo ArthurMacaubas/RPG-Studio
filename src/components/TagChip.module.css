@@ -1,0 +1,5 @@
+.chip { display: inline-flex; min-height: 24px; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: var(--radius-pill); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); line-height: 1; white-space: nowrap; }
+.dot { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; }
+.removeButton { display: grid; width: 17px; height: 17px; place-items: center; padding: 0; border: none; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; opacity: .72; }
+.removeButton:hover { background: color-mix(in srgb, currentColor 14%, transparent); opacity: 1; }
+.removeButton:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }

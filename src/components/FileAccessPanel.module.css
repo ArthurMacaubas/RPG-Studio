@@ -1,0 +1,15 @@
+.panel { margin-bottom: 16px; padding: 15px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: linear-gradient(145deg, var(--color-surface), var(--color-surface-raised)); }
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; color: var(--color-accent); }
+.title { color: var(--color-text); font-size: 12px; font-weight: 800; }
+.header p { margin: 4px 0 0; color: var(--color-text-faint); font-size: 10px; line-height: 1.45; }
+.mode { display: flex; align-items: flex-start; gap: 9px; margin-top: 14px; cursor: pointer; }
+.mode input, .member input { margin-top: 3px; accent-color: var(--color-accent); }
+.mode span, .member span { display: grid; gap: 3px; min-width: 0; }
+.mode strong, .member strong { color: var(--color-text); font-size: 10.5px; }
+.mode small, .member small { color: var(--color-text-faint); font-size: 9.5px; line-height: 1.4; }
+.members { display: grid; gap: 6px; margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+.member { display: flex; align-items: flex-start; gap: 8px; padding: 8px; border: 1px solid transparent; border-radius: var(--radius-md); background: rgba(255, 255, 255, .02); cursor: pointer; }
+.member:hover { border-color: var(--color-border); background: var(--color-surface-hover); }
+.member .visible { margin-left: auto; color: var(--color-accent-secondary); }
+.member .hidden { margin-left: auto; color: var(--color-text-faint); }
+.empty { display: flex; align-items: center; gap: 7px; color: var(--color-text-faint); font-size: 10px; }

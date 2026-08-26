@@ -1,0 +1,126 @@
+.page {
+  padding: 24px 32px 60px;
+  max-width: 760px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 20px;
+}
+
+.addButton {
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 15px;
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.addButton:hover {
+  background: var(--color-accent-hover);
+}
+
+.track {
+  position: relative;
+  padding-left: 22px;
+}
+
+.trackLine {
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--color-border);
+}
+
+.eventRow {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.eventDot {
+  position: absolute;
+  left: -22px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid var(--color-canvas);
+}
+
+.eventCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.eventDate {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--color-text-faint);
+  margin-bottom: 4px;
+}
+
+.eventTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eventTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.eventFileLink {
+  font-size: 11px;
+  color: var(--color-accent);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.eventActions {
+  display: flex;
+  gap: 2px;
+}
+
+.iconButton {
+  border: none;
+  background: transparent;
+  color: var(--color-text-faint);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  border-radius: var(--radius-sm);
+}
+
+.iconButton:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.emptyState {
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+}

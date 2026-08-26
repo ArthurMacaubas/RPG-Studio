@@ -1,0 +1,15 @@
+.panel { margin: 1.1rem 0; border: 1px solid color-mix(in srgb, var(--sage) 45%, var(--border)); background: var(--surface); padding: 1rem; }
+.panel header { display: flex; align-items: center; gap: .6rem; }
+.icon { display: grid; place-items: center; width: 2rem; height: 2rem; background: var(--sage); color: #10231f; }
+.panel header > div:nth-child(2) { flex: 1; min-width: 0; }
+.panel h2, .panel p, .panel header span { margin: 0; }
+.panel h2 { font-size: 1rem; }
+.panel header span, .panel p, .type, .panel article small { color: var(--text-muted); font-size: .74rem; }
+.panel p { margin-top: .6rem; line-height: 1.45; }
+.list { display: grid; gap: .4rem; margin-top: .7rem; }
+.list article { display: grid; gap: .18rem; border: 1px solid var(--border); background: var(--surface-2); padding: .55rem .6rem; }
+.line { display: flex; align-items: center; gap: .35rem; min-width: 0; }
+.line strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
+.line strong:nth-of-type(2) { flex: 1; }
+.type { font-weight: 650; }
+@media (max-width: 560px) { .panel { padding: .8rem; } .line { flex-wrap: wrap; } .line strong:nth-of-type(2) { flex: none; } }

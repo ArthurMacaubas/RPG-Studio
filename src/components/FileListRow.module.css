@@ -1,0 +1,15 @@
+.row { display: grid; min-height: 54px; grid-template-columns: 24px 28px minmax(180px, 1fr) 140px 120px 32px; align-items: center; gap: 12px; padding: 0 12px; border-bottom: 1px solid var(--color-border-subtle); background: transparent; cursor: pointer; transition: background var(--transition-fast), box-shadow var(--transition-fast); }
+.row:last-child { border-bottom: 0; }
+.row:hover { background: var(--color-surface-hover); box-shadow: inset 3px 0 0 var(--color-accent-secondary); }
+.rowSelected { background: var(--color-accent-muted); box-shadow: inset 3px 0 0 var(--color-accent); }
+.checkbox { width: 15px; height: 15px; accent-color: var(--color-accent); }
+.iconCell { display: flex; color: var(--color-accent-secondary); }
+.name { overflow: hidden; color: var(--color-text); font-size: var(--font-size-body); font-weight: var(--font-weight-semibold); text-overflow: ellipsis; white-space: nowrap; }
+.typeCell, .dateCell { overflow: hidden; color: var(--color-text-faint); font-family: var(--font-mono); font-size: var(--font-size-caption); letter-spacing: .03em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.starButton { display: grid; width: 28px; height: 28px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-text-faint); cursor: pointer; }
+.starButton:hover { background: var(--color-surface-active); color: var(--color-accent); }
+.starActive { color: var(--color-accent); }
+.headerRow { display: grid; grid-template-columns: 24px 28px minmax(180px, 1fr) 140px 120px 32px; gap: 12px; padding: 0 12px 9px; border-bottom: 1px solid var(--color-border); color: var(--color-text-faint); font-family: var(--font-mono); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); letter-spacing: .11em; text-transform: uppercase; }
+.sortableHeader { padding: 0; border: 0; background: none; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; text-align: left; text-transform: inherit; }
+.sortableHeader:hover { color: var(--color-accent); }
+@media (max-width: 760px) { .row, .headerRow { grid-template-columns: 24px 26px minmax(120px, 1fr) 32px; gap: 9px; } .typeCell, .dateCell, .headerRow > :nth-child(4), .headerRow > :nth-child(5) { display: none; } .row { min-height: 50px; padding-inline: 10px; } }

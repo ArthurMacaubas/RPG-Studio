@@ -1,0 +1,6 @@
+.controls { display: flex; align-items: center; gap: 10px; }
+.user { color: #aaa0bd; font-size: .86rem; }
+.controls button { min-height: 34px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .13); border-radius: 9px; background: transparent; color: #e4dcf2; cursor: pointer; }
+.controls button:hover:not(:disabled) { border-color: #9f85ff; color: #cdbfff; }
+.controls button:disabled { cursor: wait; opacity: .6; }
+@media (max-width: 650px) { .controls { align-self: flex-start; } }

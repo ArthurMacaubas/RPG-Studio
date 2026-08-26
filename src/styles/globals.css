@@ -1,0 +1,171 @@
+:root {
+  --color-background: #0b1012;
+  --color-canvas: var(--color-background);
+  --color-canvas-deep: #070a0c;
+  --color-surface: #121a1d;
+  --color-surface-elevated: #182226;
+  --color-surface-raised: var(--color-surface-elevated);
+  --color-surface-hover: #202c30;
+  --color-surface-active: #263438;
+  --color-border-subtle: rgba(158, 184, 178, 0.12);
+  --color-border: #2a393d;
+  --color-border-strong: #475b5e;
+
+  --color-text-primary: #edf3ee;
+  --color-text: var(--color-text-primary);
+  --color-text-secondary: #a8b9b4;
+  --color-text-muted: var(--color-text-secondary);
+  --color-text-faint: #70837e;
+
+  --color-accent: #c8a66a;
+  --color-accent-hover: #dfc282;
+  --color-accent-muted: rgba(200, 166, 106, 0.14);
+  --color-accent-secondary: #86aaa2;
+  --color-accent-secondary-muted: rgba(134, 170, 162, 0.13);
+
+  --color-warning: #e5ac68;
+  --color-danger: #de7d78;
+  --color-success: #88c799;
+  --color-info: #8db9c8;
+
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --font-size-caption: 0.6875rem;
+  --font-size-small: 0.75rem;
+  --font-size-body: 0.875rem;
+  --font-size-h3: 1rem;
+  --font-size-h2: 1.375rem;
+  --font-size-h1: clamp(1.85rem, 3.6vw, 3rem);
+  --font-size-display: clamp(2.35rem, 5vw, 4rem);
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.025), 0 12px 32px rgba(0, 0, 0, 0.18);
+  --shadow-float: 0 24px 62px rgba(0, 0, 0, 0.34);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --transition-fast: 140ms var(--ease-out);
+  --transition-base: 180ms var(--ease-out);
+
+  /* Compatibilidade temporária para módulos antigos; novos estilos usam --color-*. */
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-elevated);
+  --border: var(--color-border);
+  --text: var(--color-text);
+  --text-muted: var(--color-text-muted);
+  --gold: var(--color-accent);
+  --sage: var(--color-accent-secondary);
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --color-background: #f3f4ef;
+  --color-canvas: var(--color-background);
+  --color-canvas-deep: #e8ebe3;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #f9faf6;
+  --color-surface-raised: var(--color-surface-elevated);
+  --color-surface-hover: #eef1eb;
+  --color-surface-active: #e5ebe3;
+  --color-border-subtle: rgba(42, 68, 61, 0.11);
+  --color-border: #d9e0d8;
+  --color-border-strong: #bdc9c1;
+
+  --color-text-primary: #172321;
+  --color-text: var(--color-text-primary);
+  --color-text-secondary: #60716c;
+  --color-text-muted: var(--color-text-secondary);
+  --color-text-faint: #98a6a0;
+
+  --color-accent: #94723a;
+  --color-accent-hover: #765721;
+  --color-accent-muted: rgba(148, 114, 58, 0.12);
+  --color-accent-secondary: #4d7b71;
+  --color-accent-secondary-muted: rgba(77, 123, 113, 0.1);
+
+  --color-warning: #a96f26;
+  --color-danger: #b45450;
+  --color-success: #37875a;
+  --color-info: #2e7489;
+
+  --shadow-panel: 0 1px 0 rgba(20, 38, 31, 0.03), 0 14px 35px rgba(28, 46, 38, 0.08);
+  --shadow-float: 0 24px 60px rgba(28, 46, 38, 0.13);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body { padding: 0; margin: 0; min-height: 100%; }
+
+body {
+  min-height: 100vh;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 18% 0%, rgba(134, 170, 162, 0.075), transparent 28rem), linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+  background-size: auto, 48px 48px, 48px 48px;
+  content: '';
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent 72%);
+}
+
+h1, h2, h3, h4 { margin: 0; font-family: var(--font-display); font-weight: var(--font-weight-semibold); letter-spacing: -0.035em; }
+h1 { font-size: var(--font-size-h1); line-height: 1.05; }
+h2 { font-size: var(--font-size-h2); line-height: 1.15; }
+h3 { font-size: var(--font-size-h3); line-height: 1.25; }
+code, .mono { font-family: var(--font-mono); }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; }
+button { transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast); }
+button:active:not(:disabled) { transform: scale(0.97); }
+button:disabled { cursor: not-allowed; }
+input, select, textarea { color: var(--color-text); }
+input::placeholder, textarea::placeholder { color: var(--color-text-faint); opacity: 1; }
+::selection { background: rgba(200, 166, 106, 0.28); color: var(--color-text); }
+
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+
+:root[data-theme='light'] body { background: var(--color-background); }
+
+:root[data-theme='light'] body::before {
+  background-image: linear-gradient(rgba(53, 86, 78, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(53, 86, 78, .045) 1px, transparent 1px);
+}
+
+:root[data-theme='light'] ::selection { background: rgba(148, 114, 58, .24); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border: 2px solid var(--color-canvas); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }

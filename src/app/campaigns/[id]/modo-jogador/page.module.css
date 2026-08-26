@@ -1,0 +1,59 @@
+.page { width: min(100%, 1180px); min-height: 100%; margin: 0 auto; padding: 36px clamp(18px, 4vw, 48px) 70px; color: var(--color-text); }
+.loading { display: grid; min-height: 60vh; place-items: center; color: var(--color-text-muted); }
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--color-border); }
+.eyebrow { margin-bottom: 9px; color: var(--color-accent); font-family: var(--font-mono); font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.title { font-size: clamp(2rem, 4vw, 3.6rem); line-height: .98; }
+.subtitle { max-width: 680px; margin: 12px 0 0; color: var(--color-text-muted); font-size: 13px; line-height: 1.7; }
+.backLink { color: var(--color-accent); font-size: 12px; font-weight: 800; text-decoration: none; }
+.backLink:hover { color: var(--color-accent-hover); }
+.publishPanel, .previewPanel, .visibilityPanel { margin-bottom: 18px; }
+.publishBody { display: grid; gap: 15px; }
+.publishSummary { display: flex; align-items: center; gap: 10px; color: var(--color-text-muted); font-size: 12px; }
+.switch { position: relative; width: 48px; height: 28px; padding: 0; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); cursor: pointer; }
+.switch span { position: absolute; top: 4px; left: 4px; width: 18px; height: 18px; border-radius: 50%; background: var(--color-text-faint); transition: transform 180ms var(--ease-out), background 180ms var(--ease-out); }
+.switchOn { border-color: rgba(136, 199, 153, .48); background: rgba(136, 199, 153, .13); }
+.switchOn span { background: var(--color-success); transform: translateX(20px); }
+.shareRow { display: flex; align-items: center; gap: 9px; }
+.shareRow input { min-width: 0; flex: 1; min-height: 38px; padding: 0 11px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text-muted); font-family: var(--font-mono); font-size: 10px; }
+.previewLink { display: inline-flex; align-items: center; gap: 5px; color: var(--color-accent); font-size: 11px; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.publishHint { margin: 0; color: var(--color-text-faint); font-size: 12px; }
+.previewContent { display: grid; gap: 15px; }
+.previewDescription { max-width: 760px; margin: 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.7; }
+.previewControls { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; }
+.previewControls label { display: grid; min-width: min(100%, 360px); flex: 1; gap: 6px; color: var(--color-text-faint); font-family: var(--font-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.previewControls select { min-height: 40px; padding: 0 11px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font-family: var(--font-body); font-size: 12px; text-transform: none; outline: none; }
+.previewControls select:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-muted); }
+.previewResult { display: grid; gap: 12px; padding: 12px; border: 1px solid rgba(134, 170, 162, .24); border-radius: var(--radius-lg); background: linear-gradient(135deg, rgba(134, 170, 162, .09), rgba(7, 11, 13, .16)); }
+.previewSummary { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); gap: 8px; }
+.previewSummary > div { display: grid; min-width: 0; gap: 4px; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.previewSummary span { color: var(--color-text-faint); font-family: var(--font-mono); font-size: 8px; letter-spacing: .06em; text-transform: uppercase; }
+.previewSummary strong { overflow: hidden; color: var(--color-text); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.previewFiles { display: grid; gap: 7px; }
+.previewFile { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.previewFile > span { display: grid; min-width: 0; gap: 3px; }.previewFile strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }.previewFile small { color: var(--color-text-faint); font-family: var(--font-mono); font-size: 8px; letter-spacing: .06em; text-transform: uppercase; }
+.previewFile > div { display: flex; align-items: center; justify-content: flex-end; gap: 5px; flex-wrap: wrap; }.previewFile i { padding: 3px 5px; border: 1px solid; border-radius: 999px; font-size: 9px; font-style: normal; }
+.previewHint { margin: 0; padding: 11px; border-left: 2px solid var(--color-accent); color: var(--color-text-muted); background: var(--color-accent-muted); font-size: 11px; line-height: 1.6; }
+.toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.search { position: relative; flex: 1; min-width: 200px; }
+.search svg { position: absolute; top: 50%; left: 12px; color: var(--color-text-faint); transform: translateY(-50%); }
+.search input, .toolbar select { min-height: 40px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); outline: none; }
+.search input { width: 100%; padding: 0 12px 0 35px; }
+.toolbar select { padding: 0 11px; }
+.search input:focus, .toolbar select:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-muted); }
+.onlyVisible { display: inline-flex; align-items: center; gap: 7px; color: var(--color-text-muted); font-size: 11px; white-space: nowrap; }
+.onlyVisible input, .fileRow > input { width: 15px; height: 15px; accent-color: var(--color-accent); }
+.bulkBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding: 9px 11px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: rgba(7, 11, 13, .28); color: var(--color-text-faint); font-size: 10px; }
+.bulkBar > div { display: flex; gap: 3px; }
+.fileList { display: grid; gap: 7px; margin-top: 14px; }
+.fileRow { display: flex; align-items: center; gap: 11px; min-height: 58px; padding: 9px 11px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); cursor: pointer; transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out); }
+.fileRow:hover { border-color: var(--color-border-strong); background: var(--color-surface-hover); }
+.fileRowVisible { border-color: rgba(136, 199, 153, .3); background: rgba(136, 199, 153, .05); }
+.fileRowUnavailable { border-style: dashed; background: color-mix(in srgb, var(--color-surface) 88%, var(--color-danger)); cursor: not-allowed; opacity: .72; }
+.fileRowUnavailable:hover { border-color: rgba(222, 125, 120, .5); background: color-mix(in srgb, var(--color-surface) 88%, var(--color-danger)); }
+.fileRowUnavailable > input { cursor: not-allowed; }
+.fileMain { display: grid; min-width: 0; flex: 1; gap: 4px; }
+.fileMain strong { overflow: hidden; color: var(--color-text); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.fileMain small { color: var(--color-text-faint); font-family: var(--font-mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
+.fileOpen { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 7px; color: var(--color-text-faint); }
+.fileOpen:hover { background: var(--color-accent-muted); color: var(--color-accent); }
+@media (max-width: 720px) { .header { align-items: flex-start; flex-direction: column; } .shareRow { align-items: stretch; flex-direction: column; } .shareRow input { width: 100%; } .previewLink { justify-content: center; min-height: 34px; } .previewControls { align-items: stretch; flex-direction: column; } .previewControls label { width: 100%; } .previewSummary { grid-template-columns: 1fr 1fr; } .previewFile { align-items: flex-start; flex-direction: column; } .previewFile > div { justify-content: flex-start; } .bulkBar { align-items: flex-start; flex-direction: column; } .bulkBar > div { flex-wrap: wrap; } }

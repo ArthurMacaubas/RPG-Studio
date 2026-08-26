@@ -1,0 +1,64 @@
+.panel { margin-bottom: 22px; padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: linear-gradient(145deg, rgba(23, 35, 38, .96), rgba(12, 20, 22, .97)); box-shadow: var(--shadow-panel); }
+.themeOrdem { --sheet-accent: #c8a66a; --sheet-accent-muted: rgba(200, 166, 106, .13); }
+.themeDnd { --sheet-accent: #86aaa2; --sheet-accent-muted: rgba(134, 170, 162, .13); }
+.themeCustom { --sheet-accent: #b695dc; --sheet-accent-muted: rgba(182, 149, 220, .13); }
+.sheetHeader { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+.sheetIdentity { display: flex; align-items: center; gap: 11px; }
+.sheetIcon { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid color-mix(in srgb, var(--sheet-accent), transparent 55%); border-radius: 12px; background: var(--sheet-accent-muted); color: var(--sheet-accent); }
+.panelTitle { color: var(--color-text); font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+.systemLabel { margin-top: 3px; color: var(--sheet-accent); font-family: var(--font-mono); font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.tabs { display: flex; gap: 3px; overflow-x: auto; margin: 0 -4px 20px; padding: 4px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: rgba(7, 11, 13, .34); }
+.tab { min-height: 34px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--color-text-muted); cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.tab:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.tabActive { background: var(--sheet-accent-muted); color: var(--sheet-accent); box-shadow: inset 0 -2px 0 var(--sheet-accent); }
+.tabContent { display: grid; gap: 18px; }
+.identityGrid, .combatGrid { display: grid; grid-template-columns: 1.4fr 1fr 1.2fr .6fr; gap: 10px; }
+.combatGrid { grid-template-columns: repeat(3, 1fr); }
+.field { display: grid; gap: 7px; min-width: 0; }
+.field > span { color: var(--color-text-muted); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.field input, .field select, .addRow input { width: 100%; min-height: 40px; padding: 0 11px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); outline: none; }
+.field input:focus, .field select:focus, .addRow input:focus, .notes:focus { border-color: var(--sheet-accent); box-shadow: 0 0 0 3px var(--sheet-accent-muted); }
+.selectRow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sectionHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--color-text); font-size: 12px; font-weight: 800; }
+.sectionHeading > span { display: inline-flex; align-items: center; gap: 7px; }
+.attrGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 9px; }
+.attrCell { display: grid; justify-items: center; gap: 2px; padding: 11px 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); cursor: text; }
+.attrCell:hover { border-color: color-mix(in srgb, var(--sheet-accent), transparent 42%); }
+.attrLabel { color: var(--sheet-accent); font-family: var(--font-mono); font-size: 10px; font-weight: 800; }
+.attrCell small { overflow: hidden; width: 100%; color: var(--color-text-faint); font-size: 9px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.attrCell input { width: 100%; border: 0; background: transparent; color: var(--color-text); font-family: var(--font-display); font-size: 21px; font-weight: 800; text-align: center; outline: none; }
+.vitalsGrid { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 10px; }
+.vitalCard { display: grid; gap: 8px; padding: 13px; border: 1px solid color-mix(in srgb, var(--sheet-accent), transparent 60%); border-radius: var(--radius-md); background: var(--sheet-accent-muted); }
+.vitalCard > span { color: var(--sheet-accent); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.vitalCard > input, .vitalCard > div input { width: 100%; min-height: 34px; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--sheet-accent), transparent 40%); background: transparent; color: var(--color-text); font-family: var(--font-display); font-size: 22px; font-weight: 800; outline: none; }
+.vitalCard > div { display: flex; align-items: center; gap: 8px; }
+.vitalCard > div b { color: var(--color-text-faint); }
+.skillsGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 7px; }
+.skillRow { display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 7px 9px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text-muted); cursor: pointer; font-size: 11.5px; }
+.skillRow:hover { border-color: var(--color-border-strong); color: var(--color-text); }
+.skillRowChecked { border-color: color-mix(in srgb, var(--sheet-accent), transparent 48%); background: var(--sheet-accent-muted); color: var(--color-text); }
+.skillRow small { margin-left: auto; color: var(--sheet-accent); font-family: var(--font-mono); font-size: 9px; font-weight: 800; }
+.skillCheckbox { width: 14px; height: 14px; accent-color: var(--sheet-accent); }
+.addRow { display: flex; gap: 9px; }
+.itemList { display: grid; gap: 8px; }
+.itemCard { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 13px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.itemCard strong { color: var(--color-text); font-size: 12px; }
+.itemCard p { margin: 5px 0 0; color: var(--color-text-muted); font-size: 11px; line-height: 1.5; }
+.notes { width: 100%; min-height: 180px; padding: 13px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); line-height: 1.6; outline: none; resize: vertical; }
+
+@media (max-width: 720px) { .identityGrid, .combatGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vitalsGrid { grid-template-columns: 1fr 1fr; } .vitalPrimary { grid-column: 1 / -1; } }
+@media (max-width: 480px) { .panel { padding: 15px; } .identityGrid, .combatGrid, .selectRow, .vitalsGrid { grid-template-columns: 1fr; } .vitalPrimary { grid-column: auto; } .addRow { align-items: stretch; flex-direction: column; } .addRow button { width: 100%; } }
+
+.itemEditor { display: grid; min-width: 0; flex: 1; gap: 7px; }
+.itemInput, .itemTextarea { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-text); outline: none; }
+.itemInput { min-height: 34px; padding: 0 9px; font-size: 12px; font-weight: 800; }
+.itemTextarea { min-height: 58px; padding: 8px 9px; font-size: 11px; line-height: 1.5; resize: vertical; }
+.itemInput:focus, .itemTextarea:focus { border-color: var(--sheet-accent); box-shadow: 0 0 0 3px var(--sheet-accent-muted); }
+.itemMetaRow { display: flex; gap: 10px; }
+.itemMetaRow label { display: inline-flex; align-items: center; gap: 7px; color: var(--color-text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.itemMetaRow input { width: 65px; min-height: 30px; padding: 0 7px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text); }
+.itemActions { display: flex; flex-direction: column; gap: 3px; }
+.itemActions button { display: grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--color-text-faint); cursor: pointer; }
+.itemActions button:hover:not(:disabled) { background: var(--sheet-accent-muted); color: var(--sheet-accent); }
+.itemActions button:disabled { cursor: not-allowed; opacity: .28; }
+@media (max-width: 480px) { .itemCard { align-items: stretch; } .itemActions { flex-direction: row; } }

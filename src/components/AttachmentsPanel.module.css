@@ -1,0 +1,28 @@
+.panel { margin-bottom: 18px; padding: 17px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-panel); }
+.panelHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+.panelTitle { color: var(--color-text); font-size: 13px; font-weight: 800; }
+.panelHint { margin-top: 4px; color: var(--color-text-faint); font-size: 10.5px; line-height: 1.45; }
+.headerIcon { color: var(--color-accent); }
+.list { display: grid; gap: 7px; margin-bottom: 13px; }
+.row { display: flex; align-items: center; gap: 9px; min-height: 52px; padding: 7px 9px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-canvas); }
+.previewLink { display: block; width: 42px; height: 42px; flex-shrink: 0; overflow: hidden; border-radius: 8px; background: var(--color-surface-raised); }
+.thumbnail { display: block; width: 100%; height: 100%; object-fit: cover; }
+.fileIcon { flex-shrink: 0; color: var(--color-accent-secondary); }
+.attachmentMeta { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.link { overflow: hidden; color: var(--color-accent); font-size: 11.5px; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.link:hover { text-decoration: underline; }
+.attachmentMeta small { overflow: hidden; color: var(--color-text-faint); font-family: var(--font-mono); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.removeButton { display: grid; width: 28px; height: 28px; flex-shrink: 0; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--color-text-faint); cursor: pointer; }
+.removeButton:hover { background: rgba(222, 125, 120, .12); color: var(--color-danger); }
+.form { display: grid; gap: 7px; }
+.input { width: 100%; min-height: 38px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-canvas); color: var(--color-text); font-size: 11.5px; outline: none; }
+.input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-muted); }
+.formActions { display: flex; gap: 7px; flex-wrap: wrap; }
+.addButton, .uploadButton { display: inline-flex; min-height: 35px; align-items: center; justify-content: center; gap: 6px; padding: 0 11px; border-radius: var(--radius-md); font-size: 10.5px; font-weight: 800; cursor: pointer; }
+.addButton { border: 1px solid var(--color-border); background: var(--color-surface-raised); color: var(--color-text-muted); }
+.addButton:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-accent); }
+.addButton:disabled { cursor: not-allowed; opacity: .55; }
+.uploadButton { border: 1px solid rgba(200, 166, 106, .4); background: var(--color-accent-muted); color: var(--color-accent); }
+.uploadButton:hover { background: rgba(200, 166, 106, .2); }
+.fileInput { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+.empty { margin-bottom: 13px; padding: 20px; border: 1px dashed var(--color-border); border-radius: var(--radius-md); color: var(--color-text-faint); font-size: 11px; line-height: 1.5; text-align: center; }

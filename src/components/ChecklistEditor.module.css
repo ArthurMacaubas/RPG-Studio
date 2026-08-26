@@ -1,0 +1,113 @@
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.panelTitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-faint);
+  margin-bottom: 12px;
+}
+
+.progressTrack {
+  height: 5px;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 999px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.item:last-of-type {
+  border-bottom: none;
+}
+
+.itemCheckbox {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--color-success);
+  flex-shrink: 0;
+}
+
+.itemLabel {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-size: 12.5px;
+}
+
+.itemLabelDone {
+  color: var(--color-text-faint);
+  text-decoration: line-through;
+}
+
+.itemLabel:focus {
+  outline: none;
+}
+
+.removeButton {
+  border: none;
+  background: transparent;
+  color: var(--color-text-faint);
+  cursor: pointer;
+  display: flex;
+}
+
+.removeButton:hover {
+  color: var(--color-danger);
+}
+
+.addRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.addInput {
+  flex: 1;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 7px 9px;
+  color: var(--color-text);
+  font-size: 12.5px;
+}
+
+.addButton {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.addButton:hover {
+  color: var(--color-text);
+}
+
+.empty {
+  color: var(--color-text-faint);
+  font-size: 12px;
+}

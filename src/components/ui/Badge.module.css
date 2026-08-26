@@ -1,0 +1,8 @@
+.badge { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border: 1px solid transparent; border-radius: 999px; font-family: var(--font-mono); font-size: 9px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+.badge { display: inline-flex; min-height: 22px; align-items: center; gap: 4px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--radius-pill); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); letter-spacing: .01em; line-height: 1; white-space: nowrap; }
+.neutral { border-color: var(--color-border); background: var(--color-surface-elevated); color: var(--color-text-muted); }
+.accent { border-color: rgba(200, 166, 106, .28); background: var(--color-accent-muted); color: var(--color-accent); }
+.success { border-color: rgba(136, 199, 153, .28); background: rgba(136, 199, 153, .12); color: var(--color-success); }
+.warning { border-color: rgba(229, 172, 104, .28); background: rgba(229, 172, 104, .12); color: var(--color-warning); }
+.danger { border-color: rgba(222, 125, 120, .28); background: rgba(222, 125, 120, .12); color: var(--color-danger); }
+.info { border-color: rgba(134, 170, 162, .28); background: var(--color-accent-secondary-muted); color: var(--color-accent-secondary); }

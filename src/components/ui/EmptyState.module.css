@@ -1,0 +1,6 @@
+.empty { display: grid; justify-items: center; padding: 52px 24px; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-xl); background: rgba(17, 26, 29, .4); color: var(--color-text-muted); text-align: center; }
+.empty { display: grid; justify-items: center; padding: var(--space-10) var(--space-5); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--color-surface) 72%, transparent); color: var(--color-text-muted); text-align: center; }
+.icon { display: grid; width: 44px; height: 44px; place-items: center; margin-bottom: var(--space-4); border: 1px solid rgba(200, 166, 106, .28); border-radius: var(--radius-md); background: var(--color-accent-muted); color: var(--color-accent); }
+.empty h3 { color: var(--color-text); font-family: var(--font-display); font-size: var(--font-size-h3); }
+.empty p { max-width: 420px; margin: var(--space-2) 0 0; font-size: var(--font-size-body); line-height: 1.65; }
+.action { margin-top: var(--space-5); }

@@ -1,0 +1,48 @@
+{
+  "name": "rpg-campaign-studio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "NODE_ENV=production next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:run": "vitest run --run",
+    "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "prisma:format": "prisma format --check",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "db:smoke": "tsx scripts/db-smoke.ts",
+    "test:roundtrip": "vitest run src/services/campaignTransferService.test.ts --run",
+    "db:audit:relationship-integrity": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/audit-relationship-integrity.mjs",
+    "test:db:roundtrip": "RUN_DB_TESTS=1 tsx scripts/roundtrip-db.ts",
+    "test:db:relationship-constraint": "RUN_DB_TESTS=1 tsx scripts/relationship-constraint-db.ts",
+    "test:db:integrity": "RUN_DB_TESTS=1 tsx scripts/integrity-constraints-db.ts",
+    "test:db:relationship-cross-campaign": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/relationship-cross-campaign-db.ts",
+    "test:db:hypotheses": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/hypotheses-db.ts",
+    "test:db:board-views": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/board-views-db.ts",
+    "test:db:session-planning": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/session-planning-q08-db.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "lucide-react": "^0.427.0",
+    "next": "^14.2.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.5",
+    "prisma": "^5.18.0",
+    "tsx": "^4.23.12",
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.11"
+  }
+}

@@ -1,0 +1,26 @@
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.crumb {
+  text-decoration: none;
+  color: inherit;
+}
+
+.crumb:hover {
+  color: var(--color-text);
+}
+
+.crumbCurrent {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.sep {
+  color: var(--color-text-faint);
+}

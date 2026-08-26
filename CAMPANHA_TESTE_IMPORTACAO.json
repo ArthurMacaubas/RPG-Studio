@@ -1,0 +1,310 @@
+{
+  "format": "rpg-campaign-studio",
+  "version": 1,
+  "exportedAt": "2026-08-25T18:00:00.000Z",
+  "campaign": {
+    "id": "test-campaign-farol",
+    "name": "Teste — Sombras do Farol",
+    "description": "Campanha sintética para validar a importação do RPG Campaign Studio.",
+    "system": "CUSTOM",
+    "coverImage": null
+  },
+  "customSystem": {
+    "attributes": [
+      {
+        "id": "attr-coragem",
+        "name": "Coragem",
+        "shortLabel": "COR",
+        "min": 0,
+        "max": 20,
+        "defaultVal": 5,
+        "order": 0
+      },
+      {
+        "id": "attr-investigacao",
+        "name": "Investigação",
+        "shortLabel": "INV",
+        "min": 0,
+        "max": 20,
+        "defaultVal": 5,
+        "order": 1
+      }
+    ],
+    "skills": [
+      {
+        "id": "skill-percepcao",
+        "name": "Percepção",
+        "linkedAttr": "attr-investigacao",
+        "order": 0
+      },
+      {
+        "id": "skill-vontade",
+        "name": "Vontade",
+        "linkedAttr": "attr-coragem",
+        "order": 1
+      }
+    ],
+    "classes": [
+      {
+        "id": "class-investigador",
+        "name": "Investigador",
+        "description": "Especialista em pistas, padrões e segredos."
+      }
+    ],
+    "races": [
+      {
+        "id": "race-humano",
+        "name": "Humano",
+        "description": "Versátil e persistente."
+      }
+    ]
+  },
+  "files": [
+    {
+      "id": "file-farol",
+      "type": "LOCATION",
+      "name": "Farol de Pedra Negra",
+      "description": "Uma torre abandonada na costa, cercada por neblina.",
+      "content": "A luz do farol acende sozinha à meia-noite.",
+      "authorId": "test-author",
+      "data": {},
+      "isFavorite": true,
+      "isArchived": false,
+      "isTrashed": false,
+      "trashedAt": null,
+      "createdAt": "2026-08-25T17:00:00.000Z",
+      "updatedAt": "2026-08-25T17:00:00.000Z",
+      "tags": ["tag-misterio"],
+      "attachments": [],
+      "comments": [
+        {
+          "authorId": "test-author",
+          "body": "Usar esta localização como ponto de partida.",
+          "createdAt": "2026-08-25T17:05:00.000Z"
+        }
+      ],
+      "history": [
+        {
+          "action": "created",
+          "summary": "Arquivo criado para o cenário de teste.",
+          "authorId": "test-author",
+          "createdAt": "2026-08-25T17:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "file-zelador",
+      "type": "NPC",
+      "name": "Elias, o Zelador",
+      "description": "O último morador do farol.",
+      "content": "Elias afirma não ouvir vozes, mas nunca entra na sala da lanterna.",
+      "authorId": "test-author",
+      "data": {
+        "classId": "class-investigador",
+        "raceId": "race-humano",
+        "attributes": {
+          "attr-coragem": 12,
+          "attr-investigacao": 15
+        },
+        "skills": {
+          "skill-percepcao": true,
+          "skill-vontade": false
+        }
+      },
+      "isFavorite": false,
+      "isArchived": false,
+      "isTrashed": false,
+      "trashedAt": null,
+      "createdAt": "2026-08-25T17:10:00.000Z",
+      "updatedAt": "2026-08-25T17:10:00.000Z",
+      "tags": ["tag-npc"],
+      "attachments": [],
+      "comments": [],
+      "history": []
+    },
+    {
+      "id": "file-simbolo",
+      "type": "CLUE",
+      "name": "Símbolo na parede",
+      "description": "Uma marca circular gravada atrás da escada.",
+      "content": "O desenho combina três ondas e um olho fechado.",
+      "authorId": "test-author",
+      "data": {},
+      "isFavorite": false,
+      "isArchived": false,
+      "isTrashed": false,
+      "trashedAt": null,
+      "createdAt": "2026-08-25T17:20:00.000Z",
+      "updatedAt": "2026-08-25T17:20:00.000Z",
+      "tags": ["tag-misterio"],
+      "attachments": [
+        {
+          "url": "https://example.com/asset-teste-farol.png",
+          "label": "Referência visual sintética",
+          "mimeType": "image/png",
+          "createdAt": "2026-08-25T17:21:00.000Z"
+        }
+      ],
+      "comments": [],
+      "history": []
+    }
+  ],
+  "tags": [
+    {
+      "id": "tag-misterio",
+      "name": "Mistério",
+      "color": "#7B5CFF",
+      "icon": "Search",
+      "description": "Pistas ligadas ao mistério central."
+    },
+    {
+      "id": "tag-npc",
+      "name": "NPC",
+      "color": "#2E86AB",
+      "icon": "UserRound",
+      "description": "Personagens não jogáveis."
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship-farol-simbolo",
+      "fromId": "file-farol",
+      "toId": "file-simbolo",
+      "kind": "LEADS_TO",
+      "typeKey": "INVESTIGA",
+      "label": "leva à pista",
+      "description": "A exploração do farol revela o símbolo.",
+      "importance": "IMPORTANT",
+      "visibility": "ALL",
+      "createdAt": "2026-08-25T17:30:00.000Z",
+      "updatedAt": "2026-08-25T17:30:00.000Z"
+    },
+    {
+      "id": "relationship-zelador-farol",
+      "fromId": "file-zelador",
+      "toId": "file-farol",
+      "kind": "BELONGS_TO",
+      "typeKey": "BELONGS_TO",
+      "label": "cuida de",
+      "description": "Elias é responsável pelo farol.",
+      "importance": "NORMAL",
+      "visibility": "GM",
+      "createdAt": "2026-08-25T17:31:00.000Z",
+      "updatedAt": "2026-08-25T17:31:00.000Z"
+    }
+  ],
+  "relationshipTypes": [
+    {
+      "id": "relationship-type-investiga",
+      "scope": "CAMPAIGN",
+      "key": "INVESTIGA",
+      "name": "Investiga",
+      "description": "Uma entidade conduz a investigação de outra.",
+      "directional": true,
+      "color": "#D97706",
+      "icon": "Search"
+    }
+  ],
+  "favoriteFolders": [
+    {
+      "name": "Pistas principais",
+      "icon": "Star",
+      "color": "#D97706",
+      "order": 0,
+      "isCollapsed": false,
+      "entries": [
+        {
+          "fileId": "file-simbolo",
+          "order": 0
+        }
+      ]
+    }
+  ],
+  "sessions": [
+    {
+      "name": "Sessão de teste 01",
+      "date": "2026-08-25T18:30:00.000Z",
+      "summary": "Os investigadores chegam ao farol durante a maré baixa.",
+      "checklist": [
+        {
+          "label": "Examinar a sala da lanterna",
+          "done": false
+        },
+        {
+          "label": "Conversar com Elias",
+          "done": true
+        }
+      ],
+      "order": 0,
+      "fileIds": ["file-farol", "file-zelador", "file-simbolo"]
+    }
+  ],
+  "timelineEvents": [
+    {
+      "title": "A luz acende sem combustível",
+      "happenedAt": "2026-08-25T23:59:00.000Z",
+      "order": 0,
+      "fileId": "file-farol"
+    },
+    {
+      "title": "O símbolo é descoberto",
+      "happenedAt": "2026-08-26T00:15:00.000Z",
+      "order": 1,
+      "fileId": "file-simbolo"
+    }
+  ],
+  "board": {
+    "nodes": [
+      {
+        "fileId": "file-farol",
+        "x": 120,
+        "y": 140
+      },
+      {
+        "fileId": "file-zelador",
+        "x": 420,
+        "y": 140
+      },
+      {
+        "fileId": "file-simbolo",
+        "x": 270,
+        "y": 360
+      }
+    ],
+    "edges": [
+      {
+        "fromFileId": "file-farol",
+        "toFileId": "file-simbolo",
+        "label": "pista",
+        "color": "#D97706",
+        "description": "A pista aparece durante a exploração.",
+        "curve": 42
+      },
+      {
+        "fromFileId": "file-zelador",
+        "toFileId": "file-farol",
+        "label": "guarda",
+        "color": "#2E86AB",
+        "description": "O zelador protege o local.",
+        "curve": -18
+      }
+    ]
+  },
+  "playerMode": {
+    "isEnabled": true,
+    "visibility": [
+      {
+        "fileId": "file-farol",
+        "isVisible": true
+      },
+      {
+        "fileId": "file-zelador",
+        "isVisible": true
+      },
+      {
+        "fileId": "file-simbolo",
+        "isVisible": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+.panel { position: absolute; z-index: 5; top: var(--space-4); right: var(--space-4); bottom: var(--space-4); display: flex; flex-direction: column; width: min(390px, calc(100% - 32px)); overflow: hidden auto; border: 1px solid rgba(200, 166, 106, .35); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--color-surface-elevated) 94%, transparent); box-shadow: var(--shadow-float); backdrop-filter: blur(14px); }
+.panelHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-4); border-bottom: 1px solid var(--color-border-subtle); }
+.panelHeader h2, .detailHeading h3 { margin: 0; color: var(--color-text); }
+.panelHeader h2 { font-size: var(--font-size-h3); }
+.eyebrow { display: flex; align-items: center; gap: 5px; margin: 0 0 5px; color: var(--color-accent-secondary); font-family: var(--font-mono); font-size: 9px; font-weight: var(--font-weight-semibold); letter-spacing: .09em; text-transform: uppercase; }
+.iconButton, .primaryButton, .secondaryButton, .dangerButton, .smallButton, .smallDangerButton { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: var(--radius-sm); font-weight: var(--font-weight-semibold); cursor: pointer; transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast); }
+.iconButton { width: 32px; height: 32px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-accent); }
+.iconButton:hover, .smallButton:hover { border-color: var(--color-accent); background: var(--color-accent-muted); }
+.createForm, .detail, .evidenceForm { padding: var(--space-4); }
+.createForm { border-bottom: 1px solid var(--color-border-subtle); background: color-mix(in srgb, var(--color-accent-muted) 34%, transparent); }
+.createForm label, .detailFields label, .evidenceForm label, .evidenceCard label { display: grid; gap: 5px; margin-bottom: 10px; color: var(--color-text-muted); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); }
+.createForm input, .createForm textarea, .detailFields input, .detailFields textarea, .detailFields select, .evidenceForm input, .evidenceForm select, .evidenceForm textarea, .evidenceCard select, .evidenceCard textarea, .filters input, .filters select { width: 100%; box-sizing: border-box; min-height: 34px; padding: 7px 9px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text); font: inherit; outline: none; }
+.createForm textarea, .detailFields textarea, .evidenceForm textarea, .evidenceCard textarea { min-height: 62px; resize: vertical; }
+.createForm input:focus, .createForm textarea:focus, .detailFields input:focus, .detailFields textarea:focus, .detailFields select:focus, .evidenceForm input:focus, .evidenceForm select:focus, .evidenceForm textarea:focus, .evidenceCard select:focus, .evidenceCard textarea:focus, .filters input:focus, .filters select:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-muted); }
+.filters { display: grid; grid-template-columns: 1fr 145px; gap: 8px; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border-subtle); }
+.searchField { position: relative; display: flex; align-items: center; }
+.searchField svg { position: absolute; left: 9px; color: var(--color-text-faint); pointer-events: none; }
+.searchField input { padding-left: 30px; }
+.list { display: grid; gap: 4px; padding: var(--space-3) var(--space-4); }
+.hypothesisRow { display: flex; align-items: center; gap: 9px; width: 100%; padding: 10px; border: 1px solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--color-text); text-align: left; cursor: pointer; }
+.hypothesisRow:hover { border-color: var(--color-border); background: var(--color-surface-hover); }
+.hypothesisRowSelected { border-color: color-mix(in srgb, var(--color-accent) 55%, transparent); background: var(--color-accent-muted); }
+.statusDot { flex: 0 0 auto; width: 9px; height: 9px; border-radius: 50%; background: var(--color-text-faint); box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 14%, transparent); }
+.statusOPEN { color: var(--color-accent); background: var(--color-accent); }
+.statusSUPPORTED { color: #83c69b; background: #83c69b; }
+.statusREFUTED { color: var(--color-danger); background: var(--color-danger); }
+.statusRESOLVED { color: #82aeb4; background: #82aeb4; }
+.rowContent { display: grid; min-width: 0; gap: 3px; }
+.rowContent strong { overflow: hidden; font-size: var(--font-size-small); text-overflow: ellipsis; white-space: nowrap; }
+.rowContent small, .counts, .detailFooter, .evidenceHeader > div > span { color: var(--color-text-faint); font-size: var(--font-size-caption); }
+.counts { display: flex; gap: 5px; margin-left: auto; font-family: var(--font-mono); }
+.supportCount { color: #83c69b; }
+.contradictCount { color: var(--color-danger); }
+.detail { border-top: 1px solid var(--color-border-strong); }
+.detailHeading, .evidenceHeader, .detailFooter { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); }
+.detailHeading h3 { max-width: 240px; font-size: var(--font-size-body); line-height: 1.35; }
+.statusBadge { flex: 0 0 auto; padding: 4px 7px; border-radius: 999px; background: color-mix(in srgb, currentColor 14%, transparent); font-size: 10px; font-weight: var(--font-weight-semibold); }
+.detailFields { display: grid; gap: 10px; margin: var(--space-4) 0; }
+.detailFields label, .detailFields label:last-of-type { margin-bottom: 0; }
+.primaryButton, .secondaryButton { min-height: 34px; padding: 0 12px; border: 1px solid var(--color-accent); background: var(--color-accent); color: #171515; }
+.primaryButton:hover, .secondaryButton:hover { background: var(--color-accent-secondary); }
+.secondaryButton { border-color: var(--color-border-strong); background: var(--color-surface); color: var(--color-accent); }
+.evidenceHeader { align-items: center; margin: var(--space-4) 0 var(--space-2); }
+.evidenceHeader h4, .evidenceForm h4 { margin: 0; color: var(--color-text); font-size: var(--font-size-body); }
+.evidenceHeader > div { display: grid; gap: 3px; }
+.evidenceLegend { display: flex; gap: 7px; color: var(--color-text-faint); font-family: var(--font-mono); font-size: 10px; }
+.evidenceGroup { margin-top: var(--space-3); }
+.evidenceGroup h5 { display: flex; align-items: center; justify-content: space-between; margin: 0 0 6px; color: var(--color-text-muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.evidenceGroup h5 span { color: var(--color-accent); }
+.groupEmpty { margin: 0; padding: 7px 0; color: var(--color-text-faint); font-size: var(--font-size-caption); }
+.evidenceCard { display: grid; gap: 7px; margin-bottom: 7px; padding: 9px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-surface) 65%, transparent); }
+.evidenceTitle { display: flex; align-items: center; gap: 7px; width: 100%; padding: 0; border: 0; background: none; color: var(--color-text); text-align: left; cursor: pointer; }
+.evidenceTitle:hover strong { color: var(--color-accent); }
+.evidenceTitle > span:nth-child(2) { display: grid; min-width: 0; gap: 2px; }
+.evidenceTitle strong { overflow: hidden; font-size: var(--font-size-small); text-overflow: ellipsis; white-space: nowrap; }
+.evidenceTitle small { color: var(--color-text-faint); font-size: 10px; }
+.evidenceTitle svg { margin-left: auto; flex: 0 0 auto; color: var(--color-text-faint); }
+.stanceMark { display: grid; flex: 0 0 auto; width: 21px; height: 21px; place-items: center; border-radius: 50%; background: var(--color-accent-muted); color: var(--color-accent); font-family: var(--font-mono); font-weight: var(--font-weight-bold); }
+.evidenceCard label { margin-bottom: 0; font-size: 10px; }
+.evidenceCard select, .evidenceCard textarea { min-height: 30px; padding: 5px 7px; font-size: var(--font-size-caption); }
+.evidenceActions { display: flex; flex-wrap: wrap; gap: 5px; }
+.smallButton, .smallDangerButton { min-height: 28px; padding: 0 7px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-muted); font-size: 10px; }
+.smallDangerButton { color: var(--color-danger); }
+.smallDangerButton:hover { border-color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
+.dangerButton { min-height: 30px; padding: 0 8px; border: 1px solid color-mix(in srgb, var(--color-danger) 42%, transparent); background: color-mix(in srgb, var(--color-danger) 10%, transparent); color: var(--color-danger); font-size: 10px; }
+.detailFooter { align-items: center; margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--color-border-subtle); }
+.emptyState { display: grid; justify-items: center; gap: 7px; margin: var(--space-4); padding: var(--space-5) var(--space-4); border: 1px dashed var(--color-border); border-radius: var(--radius-md); color: var(--color-text-faint); font-size: var(--font-size-caption); line-height: 1.5; text-align: center; }
+.emptyState strong { color: var(--color-text-muted); font-size: var(--font-size-small); }
+.formError { margin: 0 0 8px; color: var(--color-danger); font-size: var(--font-size-caption); }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+.panel button:disabled { cursor: not-allowed; opacity: .55; }
+@media (max-width: 920px) { .panel { top: var(--space-3); right: var(--space-3); bottom: var(--space-3); } }
+@media (max-width: 720px) { .panel { top: 88px; right: var(--space-3); bottom: var(--space-3); width: calc(100% - 24px); } .filters { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .iconButton, .primaryButton, .secondaryButton, .dangerButton, .smallButton, .smallDangerButton { transition: none; } }

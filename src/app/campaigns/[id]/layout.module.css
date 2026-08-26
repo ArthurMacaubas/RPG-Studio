@@ -1,0 +1,14 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.workspace { width: min(100%, 1540px); min-height: calc(100vh - 66px); margin: 0 auto; padding: var(--space-6) var(--space-8) var(--space-12); }
+
+@media (max-width: 720px) { .workspace { min-height: calc(100vh - 64px); padding: var(--space-5) var(--space-4) var(--space-10); } }

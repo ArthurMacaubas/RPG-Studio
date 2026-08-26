@@ -1,0 +1,32 @@
+.loading { color: var(--text-muted); margin: 0; }
+.createIntro { display: flex; gap: .65rem; align-items: flex-start; padding: .8rem; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-muted); font-size: .84rem; line-height: 1.45; }
+.createIntro svg { color: var(--gold); flex: 0 0 auto; }
+.createRow { display: grid; grid-template-columns: 1.25fr 1.25fr auto; gap: .55rem; margin-top: .8rem; }
+.createRow input, .createRow select, .conditionRow input, .draftRow input { min-width: 0; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: .45rem; padding: .52rem .6rem; font: inherit; }
+.draftList { display: grid; gap: .4rem; margin-top: .75rem; }
+.draftRow { display: grid; grid-template-columns: minmax(8rem, 1fr) auto auto auto auto; gap: .45rem; align-items: center; border: 1px solid var(--border); padding: .45rem .55rem; background: var(--surface-2); }
+.draftRow label { display: flex; align-items: center; gap: .25rem; font-size: .7rem; color: var(--text-muted); }
+.draftRow input { width: 3.2rem; padding: .28rem; }
+.draftRow button, .conditionRow button, .hpControl button { border: 0; background: transparent; color: var(--text-muted); cursor: pointer; }
+.createFooter, .combatToolbar, .participantLead, .participantControls, .conditionRow { display: flex; align-items: center; gap: .55rem; }
+.createFooter { justify-content: space-between; margin-top: .8rem; }
+.createFooter small, .combatToolbar small, .participantLead small { color: var(--text-muted); display: block; font-size: .72rem; }
+.combatToolbar { justify-content: space-between; margin-bottom: .7rem; }
+.combatToolbar > div:last-child { display: flex; gap: .35rem; flex-wrap: wrap; justify-content: flex-end; }
+.participants { display: grid; gap: .45rem; }
+.participant { border: 1px solid var(--border); background: var(--surface-2); padding: .6rem; display: grid; gap: .5rem; }
+.participantCurrent { border-color: var(--gold); box-shadow: inset 3px 0 0 var(--gold); }
+.participantDefeated { opacity: .58; }
+.initiative { display: grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--gold); color: #231c11; font-weight: 800; font-size: .78rem; }
+.participantLead { min-width: 0; }
+.participantLead > div { min-width: 0; flex: 1; }
+.participantLead strong { font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.participantControls { justify-content: space-between; }
+.hpControl { display: flex; align-items: center; gap: .38rem; color: var(--sage); }
+.hpControl strong { color: var(--text); min-width: 3.5rem; text-align: center; font-size: .8rem; }
+.hpControl button { font-size: 1rem; border: 1px solid var(--border); width: 1.45rem; height: 1.45rem; }
+.visibilityToggle { display: inline-flex; gap: .3rem; align-items: center; color: var(--text-muted); font-size: .72rem; cursor: pointer; }
+.noHp { color: var(--text-muted); font-size: .75rem; }
+.conditionRow input { flex: 1; font-size: .76rem; padding: .42rem .5rem; }
+.conditionRow button { color: var(--gold); font-size: .74rem; white-space: nowrap; }
+@media (max-width: 700px) { .createRow { grid-template-columns: 1fr; } .draftRow { grid-template-columns: 1fr auto auto; } .draftRow label { grid-column: span 1; } .combatToolbar, .participantControls { align-items: flex-start; flex-direction: column; } .combatToolbar > div:last-child { justify-content: flex-start; } .participantLead { flex-wrap: wrap; } }

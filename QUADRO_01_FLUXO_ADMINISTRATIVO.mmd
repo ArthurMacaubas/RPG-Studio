@@ -1,0 +1,13 @@
+flowchart LR
+  UI["Quadro administrativo\nPainel Hipóteses"] --> API["Rotas /api/campaigns/:id/hypotheses"]
+  API --> GUARD{"OWNER?"}
+  GUARD -- "não: 401/403 seguro" --> STOP["Sem dados privados"]
+  GUARD -- "sim" --> SERVICE["hypothesisService\nângulo campaignId"]
+  SERVICE --> FILE["CampaignFile\nmesma campanha\nfora da lixeira"]
+  SERVICE --> DB[("PostgreSQL\nHipótese + Evidência")]
+  FILE --> DB
+  UI --> FOCUS["Foco/destaque temporário\ndo BoardNode existente"]
+  FOCUS -. "não cria Relationship\nnão persiste aresta" .-> BOARD["Canvas do Quadro"]
+  ADMIN["Exportação/importação administrativa"] --> TRANSFER["investigation.hypotheses\nfileId remapeado em REMAP"]
+  TRANSFER --> DB
+  DB -. "não serializa" .-> PLAYER["Modo Jogador / público"]

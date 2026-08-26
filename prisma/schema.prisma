@@ -1,0 +1,743 @@
+// RPG Campaign Studio — Prisma schema
+// PostgreSQL. Every "file" in the sidebar (NPC, Puzzle, Document, Clue, Object,
+// Event, Session, Map, Character, ...) is stored as a single polymorphic
+// CampaignFile row + a JSON `data` payload shaped by `type`. This is what lets
+// relationships, tags, favorites, search, and the investigation board work
+// uniformly across every content type without a table per type.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SystemType {
+  ORDEM_PARANORMAL
+  DND_5E
+  CUSTOM
+}
+
+enum FileType {
+  CAMPAIGN
+  NPC
+  CHARACTER
+  THREAT
+  PUZZLE
+  DOCUMENT
+  CLUE
+  OBJECT
+  EVENT
+  SESSION
+  MAP
+  IMAGE
+  AUDIO
+  VIDEO
+  NOTE
+  LOCATION
+}
+
+enum CombatEncounterStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ENDED
+}
+
+enum CombatParticipantKind {
+  CHARACTER
+  THREAT
+}
+
+enum RelationshipKind {
+  GENERIC
+  LEADS_TO
+  BELONGS_TO
+  CONTAINS
+  BLOCKS
+  UNLOCKS
+}
+
+enum RelationshipImportance {
+  CRITICAL
+  IMPORTANT
+  NORMAL
+  OPTIONAL
+}
+
+enum RelationshipVisibility {
+  GM
+  ALL
+  P1
+  P2
+  P3
+  P4
+}
+
+enum CampaignMemberAudience {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum CampaignMemberRole {
+  PLAYER
+}
+
+enum CampaignInviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+enum HypothesisStatus {
+  OPEN
+  SUPPORTED
+  REFUTED
+  RESOLVED
+}
+
+enum EvidenceStance {
+  SUPPORTS
+  CONTRADICTS
+  CONTEXT
+}
+
+enum InvestigationBoardViewKind {
+  SESSION
+  CASE
+  ARC
+}
+
+enum SessionPlanningStatus {
+  PLANNED
+  COMPLETED
+}
+
+model User {
+  id             String              @id @default(cuid())
+  name           String
+  email          String              @unique
+  passwordHash   String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @default(now()) @updatedAt
+  ownedCampaigns Campaign[]          @relation("CampaignOwner")
+  memberships    CampaignMember[]
+  authSessions   AuthSession[]
+  sentInvites    CampaignInvite[]    @relation("InviteSender")
+  fileGrants     CampaignFileGrant[]
+  auditEvents    AuditEvent[]        @relation("AuditActor")
+}
+
+model Campaign {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  system      SystemType @default(CUSTOM)
+  coverImage  String?
+  isArchived  Boolean    @default(false)
+  archivedAt  DateTime?
+  ownerId     String
+  owner       User       @relation("CampaignOwner", fields: [ownerId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Custom-system configuration (only populated when system = CUSTOM)
+  attributes CampaignAttribute[]
+  skills     CampaignSkill[]
+  classes    CampaignClass[]
+  races      CampaignRace[]
+
+  files                    CampaignFile[]
+  tags                     Tag[]
+  favoriteFolders          FavoriteFolder[]
+  sessions                 Session[]
+  timelineEvents           TimelineEvent[]
+  boardNodes               BoardNode[]
+  boardEdges               BoardEdge[]
+  playerModeConfig         PlayerModeConfig?
+  members                  CampaignMember[]
+  invites                  CampaignInvite[]
+  auditEvents              AuditEvent[]
+  combatEncounters         CombatEncounter[]
+  relationships            Relationship[]
+  relationshipTypes        RelationshipType[]
+  hypotheses               InvestigationHypothesis[]
+  investigationBoardPins   InvestigationBoardPin[]
+  investigationBoardGroups InvestigationBoardGroup[]
+  investigationBoardViews  InvestigationBoardView[]
+
+  @@index([ownerId])
+}
+
+// ---------- Custom system builder ----------
+
+model CampaignAttribute {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name       String // e.g. "Sanidade", "Mana"
+  shortLabel String? // e.g. "SAN"
+  min        Int      @default(0)
+  max        Int      @default(100)
+  defaultVal Int      @default(0)
+  order      Int      @default(0)
+
+  @@index([campaignId])
+}
+
+model CampaignSkill {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name       String
+  linkedAttr String?
+  order      Int      @default(0)
+
+  @@index([campaignId])
+}
+
+model CampaignClass {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+
+  @@index([campaignId])
+}
+
+model CampaignRace {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+
+  @@index([campaignId])
+}
+
+// ---------- Universal content model ----------
+
+model CampaignFile {
+  id          String    @id @default(cuid())
+  campaignId  String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  type        FileType
+  name        String
+  description String?
+  content     String? // common rich-text/notes body, shared by every file type
+  data        Json      @default("{}") // type-specific fields (stats, sheet, dates, etc.)
+  authorId    String?
+  isFavorite  Boolean   @default(false)
+  isArchived  Boolean   @default(false)
+  isTrashed   Boolean   @default(false)
+  trashedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tags        FileTag[]
+  attachments Attachment[]
+  comments    Comment[]
+  history     FileHistoryEntry[]
+
+  favoriteEntry FavoriteEntry[]
+
+  relationshipsFrom Relationship[] @relation("RelFrom")
+  relationshipsTo   Relationship[] @relation("RelTo")
+
+  sessionLinks  SessionFile[]
+  timelineLinks TimelineEvent[] @relation("TimelineFile")
+  boardNode     BoardNode?
+
+  playerVisibility   PlayerVisibility?
+  restrictToGrants   Boolean              @default(false)
+  grants             CampaignFileGrant[]
+  combatParticipants CombatParticipant[]  @relation("CombatSourceFile")
+  hypothesisEvidence HypothesisEvidence[]
+
+  @@unique([campaignId, id], name: "CampaignFile_campaignId_id_key")
+  @@index([campaignId, type])
+  @@index([campaignId, isTrashed])
+}
+
+model Attachment {
+  id        String       @id @default(cuid())
+  fileId    String
+  file      CampaignFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  url       String
+  label     String?
+  mimeType  String?
+  createdAt DateTime     @default(now())
+
+  @@index([fileId])
+}
+
+model Comment {
+  id        String       @id @default(cuid())
+  fileId    String
+  file      CampaignFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  authorId  String?
+  body      String
+  createdAt DateTime     @default(now())
+
+  @@index([fileId])
+}
+
+model FileHistoryEntry {
+  id        String       @id @default(cuid())
+  fileId    String
+  file      CampaignFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  action    String // "created" | "edited" | "archived" | "restored" | ...
+  summary   String?
+  authorId  String?
+  createdAt DateTime     @default(now())
+
+  @@index([fileId])
+}
+
+// ---------- Tags ----------
+
+model Tag {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name        String
+  color       String   @default("#7B5CFF")
+  icon        String? // optional lucide-react icon name
+  description String?
+
+  files FileTag[]
+
+  @@unique([campaignId, name])
+}
+
+model FileTag {
+  fileId String
+  file   CampaignFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  tagId  String
+  tag    Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([fileId, tagId])
+}
+
+// ---------- Official relationships between any two files ----------
+
+model RelationshipType {
+  id          String    @id @default(cuid())
+  campaignId  String?
+  campaign    Campaign? @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  key         String
+  name        String
+  description String?
+  directional Boolean   @default(true)
+  color       String?
+  icon        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  relationships Relationship[]
+
+  @@unique([campaignId, key])
+  @@index([key])
+}
+
+model Relationship {
+  id          String                 @id @default(cuid())
+  campaignId  String
+  campaign    Campaign               @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  fromId      String
+  from        CampaignFile           @relation("RelFrom", fields: [campaignId, fromId], references: [campaignId, id], onDelete: Cascade, onUpdate: Cascade)
+  toId        String
+  to          CampaignFile           @relation("RelTo", fields: [campaignId, toId], references: [campaignId, id], onDelete: Cascade, onUpdate: Cascade)
+  typeId      String
+  type        RelationshipType       @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  kind        RelationshipKind       @default(GENERIC) // transitional export/import compatibility
+  label       String?
+  description String?
+  importance  RelationshipImportance @default(NORMAL)
+  visibility  RelationshipVisibility @default(GM)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@unique([campaignId, fromId, toId, typeId])
+  @@index([fromId])
+  @@index([toId])
+  @@index([campaignId])
+}
+
+// ---------- Favorites (pinned, user-defined folders) ----------
+
+model FavoriteFolder {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name        String
+  icon        String? // optional lucide-react icon name
+  color       String?
+  order       Int      @default(0)
+  isCollapsed Boolean  @default(false)
+
+  entries FavoriteEntry[]
+
+  @@index([campaignId])
+}
+
+model FavoriteEntry {
+  id       String         @id @default(cuid())
+  folderId String
+  folder   FavoriteFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  fileId   String
+  file     CampaignFile   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  order    Int            @default(0)
+
+  @@unique([folderId, fileId])
+}
+
+// ---------- Sessions ----------
+
+model Session {
+  id          String                @id @default(cuid())
+  campaignId  String
+  campaign    Campaign              @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name        String
+  date        DateTime?
+  summary     String?
+  checklist   Json                  @default("[]") // [{ label, done }]
+  objectives  Json                  @default("[]")
+  agenda      Json                  @default("[]")
+  postSummary String?
+  status      SessionPlanningStatus @default(PLANNED)
+  completedAt DateTime?
+  order       Int                   @default(0)
+
+  files            SessionFile[]
+  hypothesisLinks  SessionHypothesis[]
+  boardViewLinks   SessionBoardView[]
+  combatEncounters CombatEncounter[]
+
+  @@index([campaignId])
+}
+
+model SessionFile {
+  sessionId String
+  session   Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  fileId    String
+  file      CampaignFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, fileId])
+}
+
+// ---------- Combat ----------
+
+// Threats are represented by CampaignFile(type = THREAT), which preserves the
+// common editor, tags, attachments, grants, history and player publication
+// semantics. Combat state is separate because it is transient and changes more
+// frequently than the source sheets.
+model CombatEncounter {
+  id         String                @id @default(cuid())
+  campaignId String
+  campaign   Campaign              @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  sessionId  String?
+  session    Session?              @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  name       String
+  status     CombatEncounterStatus @default(NOT_STARTED)
+  round      Int                   @default(0)
+  turnIndex  Int                   @default(0)
+  createdAt  DateTime              @default(now())
+  startedAt  DateTime?
+  endedAt    DateTime?
+  updatedAt  DateTime              @updatedAt
+
+  participants CombatParticipant[]
+
+  @@index([campaignId, status])
+  @@index([sessionId])
+}
+
+model CombatParticipant {
+  id                 String                @id @default(cuid())
+  encounterId        String
+  encounter          CombatEncounter       @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  sourceFileId       String?
+  sourceFile         CampaignFile?         @relation("CombatSourceFile", fields: [sourceFileId], references: [id], onDelete: SetNull)
+  name               String
+  kind               CombatParticipantKind
+  initiative         Int                   @default(0)
+  initiativeBonus    Int                   @default(0)
+  turnOrder          Int                   @default(0)
+  currentHp          Int?
+  maxHp              Int?
+  conditions         Json                  @default("[]")
+  isDefeated         Boolean               @default(false)
+  isVisibleToPlayers Boolean               @default(true)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  @@index([encounterId, turnOrder])
+  @@index([sourceFileId])
+}
+
+// ---------- Timeline ----------
+
+model TimelineEvent {
+  id         String        @id @default(cuid())
+  campaignId String
+  campaign   Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  fileId     String?
+  file       CampaignFile? @relation("TimelineFile", fields: [fileId], references: [id])
+  title      String
+  happenedAt DateTime
+  order      Int           @default(0)
+
+  @@index([campaignId])
+}
+
+// ---------- Investigation board ----------
+
+model BoardNode {
+  id         String       @id @default(cuid())
+  campaignId String
+  campaign   Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  fileId     String       @unique
+  file       CampaignFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  x          Float        @default(0)
+  y          Float        @default(0)
+
+  edgesFrom  BoardEdge[]                   @relation("EdgeFrom")
+  edgesTo    BoardEdge[]                   @relation("EdgeTo")
+  groupItems InvestigationBoardGroupItem[]
+
+  @@unique([campaignId, id])
+  @@index([campaignId])
+}
+
+model BoardEdge {
+  id          String    @id @default(cuid())
+  campaignId  String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  fromNodeId  String
+  fromNode    BoardNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNodeId    String
+  toNode      BoardNode @relation("EdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+  label       String?
+  color       String    @default("#E63946")
+  description String?
+  curve       Float     @default(0)
+
+  @@index([campaignId])
+}
+
+model InvestigationBoardPin {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  text       String
+  x          Float    @default(0)
+  y          Float    @default(0)
+  color      String   @default("#E5AC68")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([campaignId])
+}
+
+model InvestigationBoardGroup {
+  id         String                        @id @default(cuid())
+  campaignId String
+  campaign   Campaign                      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name       String
+  color      String                        @default("#86AAA2")
+  x          Float                         @default(0)
+  y          Float                         @default(0)
+  width      Float                         @default(320)
+  height     Float                         @default(180)
+  items      InvestigationBoardGroupItem[]
+  createdAt  DateTime                      @default(now())
+  updatedAt  DateTime                      @updatedAt
+
+  @@unique([campaignId, id])
+  @@index([campaignId])
+}
+
+model InvestigationBoardGroupItem {
+  campaignId  String
+  groupId     String
+  group       InvestigationBoardGroup @relation(fields: [campaignId, groupId], references: [campaignId, id], onDelete: Cascade)
+  boardNodeId String
+  boardNode   BoardNode               @relation(fields: [campaignId, boardNodeId], references: [campaignId, id], onDelete: Cascade)
+  createdAt   DateTime                @default(now())
+
+  @@id([groupId, boardNodeId])
+  @@index([campaignId, boardNodeId])
+}
+
+model InvestigationBoardView {
+  id           String                     @id @default(cuid())
+  campaignId   String
+  campaign     Campaign                   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name         String
+  kind         InvestigationBoardViewKind @default(SESSION)
+  description  String?
+  order        Int                        @default(0)
+  snapshot     Json
+  sessionLinks SessionBoardView[]
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @default(now()) @updatedAt
+
+  @@unique([campaignId, name])
+  @@index([campaignId, kind, order])
+}
+
+model InvestigationHypothesis {
+  id         String           @id @default(cuid())
+  campaignId String
+  campaign   Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title      String
+  summary    String?
+  status     HypothesisStatus @default(OPEN)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  evidence     HypothesisEvidence[]
+  sessionLinks SessionHypothesis[]
+
+  @@index([campaignId, status])
+}
+
+model SessionHypothesis {
+  sessionId    String
+  session      Session                 @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  hypothesisId String
+  hypothesis   InvestigationHypothesis @relation(fields: [hypothesisId], references: [id], onDelete: Cascade)
+  createdAt    DateTime                @default(now())
+
+  @@id([sessionId, hypothesisId])
+  @@index([hypothesisId])
+}
+
+model SessionBoardView {
+  sessionId String
+  session   Session                @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  viewId    String
+  view      InvestigationBoardView @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  createdAt DateTime               @default(now())
+
+  @@id([sessionId, viewId])
+  @@index([viewId])
+}
+
+model HypothesisEvidence {
+  id           String                  @id @default(cuid())
+  hypothesisId String
+  hypothesis   InvestigationHypothesis @relation(fields: [hypothesisId], references: [id], onDelete: Cascade)
+  fileId       String
+  file         CampaignFile            @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  stance       EvidenceStance
+  note         String?
+  order        Int                     @default(0)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+
+  @@unique([hypothesisId, fileId])
+  @@index([hypothesisId, stance, order])
+  @@index([fileId])
+}
+
+model CampaignFileGrant {
+  id        String       @id @default(cuid())
+  fileId    String
+  userId    String
+  canView   Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  file      CampaignFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, userId])
+  @@index([userId])
+}
+
+model AuditEvent {
+  id         String    @id @default(cuid())
+  campaignId String?
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json      @default("{}")
+  createdAt  DateTime  @default(now())
+  campaign   Campaign? @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  actor      User?     @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([campaignId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+// ---------- Player Mode ----------
+
+model PlayerModeConfig {
+  id         String   @id @default(cuid())
+  campaignId String   @unique
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  isEnabled  Boolean  @default(false)
+  shareSlug  String?  @unique
+}
+
+model PlayerVisibility {
+  fileId    String       @id
+  file      CampaignFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  isVisible Boolean      @default(false)
+}
+
+// ---------- Own authentication and campaign membership ----------
+
+model AuthSession {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model CampaignMember {
+  id         String                  @id @default(cuid())
+  campaignId String
+  userId     String
+  role       CampaignMemberRole      @default(PLAYER)
+  audience   CampaignMemberAudience?
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @default(now()) @updatedAt
+  campaign   Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user       User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, userId])
+  @@unique([campaignId, audience])
+  @@index([userId])
+}
+
+model CampaignInvite {
+  id           String               @id @default(cuid())
+  campaignId   String
+  inviterId    String
+  inviteeEmail String
+  tokenHash    String               @unique
+  role         CampaignMemberRole   @default(PLAYER)
+  status       CampaignInviteStatus @default(PENDING)
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  createdAt    DateTime             @default(now())
+  campaign     Campaign             @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  inviter      User                 @relation("InviteSender", fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, status])
+  @@index([inviteeEmail, status])
+}

@@ -1,0 +1,13 @@
+.overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: var(--space-5); background: rgba(4, 8, 9, .76); backdrop-filter: blur(7px); }
+.dialog { width: 100%; max-height: min(88vh, 860px); overflow: auto; padding: clamp(18px, 3vw, 26px); border: 1px solid var(--color-border-strong); border-radius: var(--radius-xl); background: var(--color-surface-elevated); box-shadow: var(--shadow-float); animation: dialogIn 180ms var(--ease-out); }
+.sm { max-width: 420px; }
+.md { max-width: 560px; }
+.lg { max-width: 760px; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
+.title { font-size: var(--font-size-h2); }
+.description { max-width: 560px; margin: var(--space-2) 0 0; color: var(--color-text-muted); font-size: var(--font-size-small); line-height: 1.55; }
+.closeButton { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-muted); cursor: pointer; }
+.closeButton:hover { border-color: var(--color-border-strong); background: var(--color-surface-hover); color: var(--color-text); }
+@keyframes dialogIn { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width: 520px) { .overlay { align-items: end; padding: var(--space-3); } .dialog { max-height: 88vh; border-radius: var(--radius-lg) var(--radius-lg) var(--radius-md) var(--radius-md); } }
+@media (prefers-reduced-motion: reduce) { .dialog { animation: none; } }
