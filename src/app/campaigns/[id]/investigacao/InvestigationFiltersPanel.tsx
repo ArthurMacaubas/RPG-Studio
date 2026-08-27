@@ -143,6 +143,8 @@ export default function InvestigationFiltersPanel({ filters, investigationFilter
     investigationFilters.importantRelationship ? 'important-relationship' : ''
   ].filter(Boolean).length;
   const showResults = activeFilterCount > 0;
+  const nodeSummary = visibleNodeCount === 1 ? '1 nó visível' : `${visibleNodeCount} nós visíveis`;
+  const resultSummary = visibleFiles.length === 1 ? '1 resultado local' : `${visibleFiles.length} resultados locais`;
 
   return (
     <aside className={styles.panel} aria-label="Filtros e camadas do quadro">
@@ -150,7 +152,7 @@ export default function InvestigationFiltersPanel({ filters, investigationFilter
         <div><p className={styles.eyebrow}><SlidersHorizontal size={13} /> Navegação do quadro</p><h2>Filtros e camadas</h2></div>
         <button type="button" className={styles.resetButton} onClick={onReset} aria-label="Limpar filtros" title="Limpar filtros"><RotateCcw size={14} /></button>
       </div>
-      <p className={styles.summary} aria-live="polite">{activeFilterCount ? `${activeFilterCount} filtro${activeFilterCount === 1 ? '' : 's'} ativo${activeFilterCount === 1 ? '' : 's'}` : 'Nenhum filtro ativo'} · {visibleNodeCount} nó{visibleNodeCount === 1 ? '' : 's'} visível{visibleNodeCount === 1 ? '' : 'is'} · {visibleFiles.length} resultado{visibleFiles.length === 1 ? '' : 's'} local{visibleFiles.length === 1 ? '' : 'is'}</p>
+      <p className={styles.summary} aria-live="polite">{activeFilterCount ? `${activeFilterCount} filtro${activeFilterCount === 1 ? '' : 's'} ativo${activeFilterCount === 1 ? '' : 's'}` : 'Nenhum filtro ativo'} · {nodeSummary} · {resultSummary}</p>
 
       <label className={styles.searchField}><Search size={14} /><span className={styles.srOnly}>Buscar no quadro</span><input value={filters.search} onChange={(event) => onChange(updateFilter(filters, 'search', event.target.value))} placeholder="Nome, tipo, tags ou hipótese..." /></label>
 

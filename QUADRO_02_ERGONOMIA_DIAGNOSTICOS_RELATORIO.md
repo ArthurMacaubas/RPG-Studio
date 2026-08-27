@@ -2,7 +2,7 @@
 
 **Projeto:** RPG Campaign Studio
 **Incremento:** Quadro de Investigação — Quadro 02
-**Status:** EM VALIDAÇÃO FINAL
+**Status:** APROVADO
 **Escopo:** somente a superfície administrativa do Quadro de Investigação.
 
 ## 1. Contexto e decisão
@@ -67,7 +67,9 @@ A revisão de segurança não encontrou URL PostgreSQL, credencial, token, chave
 
 ## 7. Validação manual
 
-A validação manual deve ser feita autenticado como OWNER, cobrindo abertura/fechamento de Explorar e Diagnósticos, busca normalizada, filtros combináveis, camadas, seleção de hipótese, foco de evidência, relação oficial somente leitura, limpeza por botão/Escape, teclado e viewport estreito. A evidência final será registrada de modo anonimizado, sem nomes reais de campanha, IDs, URLs internas, hosts ou credenciais.
+A validação manual foi executada no deployment de produção autenticado como OWNER usando uma campanha sintética de teste. Foram confirmados: abertura e fechamento de Explorar; abertura e fechamento do drawer Diagnósticos com estado vazio positivo; busca local; contador e lista de resultados; filtro de presença `No canvas`; ações Focar; relação oficial somente leitura; e ausência de navegação ou gravação ao alterar filtros. O filtro foi limpo ao final e nenhum dado foi criado ou alterado.
+
+A validação foi registrada de modo anonimizado, sem nomes reais de campanha, IDs, URLs internas de preview, hosts ou credenciais. A revisão de viewport estreito permanece coberta pelos estilos responsivos e pelo build; não foi feita alteração persistente para essa verificação.
 
 ## 8. Riscos residuais e não-escopo
 
