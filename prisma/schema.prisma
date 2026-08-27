@@ -169,6 +169,7 @@ model Campaign {
   investigationBoardPins   InvestigationBoardPin[]
   investigationBoardGroups InvestigationBoardGroup[]
   investigationBoardViews  InvestigationBoardView[]
+  briefing                 CampaignBriefing?
 
   @@index([ownerId])
 }
@@ -484,16 +485,31 @@ model CombatParticipant {
 // ---------- Timeline ----------
 
 model TimelineEvent {
-  id         String        @id @default(cuid())
-  campaignId String
-  campaign   Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  fileId     String?
-  file       CampaignFile? @relation("TimelineFile", fields: [fileId], references: [id])
-  title      String
-  happenedAt DateTime
-  order      Int           @default(0)
+  id          String        @id @default(cuid())
+  campaignId  String
+  campaign    Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  fileId      String?
+  file        CampaignFile? @relation("TimelineFile", fields: [fileId], references: [id])
+  title       String
+  happenedAt  DateTime
+  order       Int           @default(0)
+  isPublished Boolean       @default(false)
 
   @@index([campaignId])
+  @@index([campaignId, isPublished])
+}
+
+model CampaignBriefing {
+  id          String   @id @default(cuid())
+  campaignId  String   @unique
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title       String
+  body        String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([campaignId, isPublished])
 }
 
 // ---------- Investigation board ----------

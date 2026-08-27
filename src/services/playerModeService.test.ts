@@ -13,7 +13,8 @@ const mocks = vi.hoisted(() => ({
   getViewerContext: vi.fn(),
   getPublicViewerContext: vi.fn(),
   publishedFileWhere: vi.fn(),
-  publicationStateOf: vi.fn()
+  publicationStateOf: vi.fn(),
+  getPublicSnapshot: vi.fn()
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -25,6 +26,7 @@ vi.mock('@/lib/prisma', () => ({
 }));
 vi.mock('@/lib/access', () => ({ getCampaignAccess: mocks.getCampaignAccess, assertCampaignAccess: mocks.assertCampaignAccess, assertFileAccess: mocks.assertFileAccess }));
 vi.mock('@/services/auditService', () => ({ recordAudit: mocks.recordAudit }));
+vi.mock('@/services/campaignBriefingService', () => ({ campaignBriefingService: { getPublicSnapshot: mocks.getPublicSnapshot } }));
 vi.mock('./relationshipService', () => ({ relationshipService: { listForPlayer: mocks.listForPlayer, listForPublic: mocks.listForPublic } }));
 vi.mock('@/lib/publicationPolicy', () => ({
   getViewerContext: mocks.getViewerContext,
@@ -42,6 +44,7 @@ describe('playerModeService.previewForMember', () => {
     mocks.getCampaignAccess.mockResolvedValue({ role: 'OWNER', user: { id: 'gm-1' } });
     mocks.campaignMemberFindUnique.mockResolvedValue({ id: 'member-1', userId: 'player-1', audience: 'P1', user: { id: 'player-1', name: 'Ana', email: 'ana@example.com' } });
     mocks.recordAudit.mockResolvedValue(undefined);
+    mocks.getPublicSnapshot.mockResolvedValue({ briefing: null, timeline: [] });
     mocks.publishedFileWhere.mockReturnValue({ campaignId: 'campaign-1', isTrashed: false, isArchived: false, playerVisibility: { isVisible: true } });
   });
 
@@ -71,6 +74,7 @@ describe('playerModeService.getAuthenticatedCampaign', () => {
     mocks.playerModeConfigFindUnique.mockResolvedValue({ campaign: { id: 'campaign-1', name: 'Mesa' } });
     mocks.campaignFileFindMany.mockResolvedValue([{ id: 'file-public' }, { id: 'file-grant' }]);
     mocks.listForPlayer.mockResolvedValue([]);
+    mocks.getPublicSnapshot.mockResolvedValue({ briefing: null, timeline: [] });
   });
 
   it('entrega relações somente após a coleção segura de arquivos do jogador', async () => {

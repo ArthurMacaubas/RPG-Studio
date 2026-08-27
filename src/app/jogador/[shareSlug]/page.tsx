@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { FileTypeIcon } from '@/components/fileTypeIcon';
 import { PlayerRelationshipsPanel } from '@/components/PlayerRelationshipsPanel';
+import { PlayerBriefingTimeline } from '@/components/PlayerBriefingTimeline';
 import type { CampaignFile, FileType, PublicCampaignData } from '@/types';
 import { FILE_TYPE_LABELS, SYSTEM_LABELS } from '@/types';
 import styles from './page.module.css';
@@ -38,6 +39,7 @@ export default function PlayerPublicPage({ params }: { params: { shareSlug: stri
     <main className={styles.container}>
       <header className={styles.hero}><div className={styles.heroMark}><BookOpen size={20} /></div><div><span className={styles.eyebrow}>{SYSTEM_LABELS[data.campaign.system]} · Área do jogador</span><h1 className={styles.title}>{data.campaign.name}</h1>{data.campaign.description && <p className={styles.description}>{data.campaign.description}</p>}</div></header>
       <div className={styles.stats}><span><strong>{data.files.length}</strong> conteúdos liberados</span><span><strong>{types.length}</strong> categorias</span><span>somente leitura</span></div>
+      <PlayerBriefingTimeline briefing={data.briefing} timeline={data.timeline} />
       <PlayerRelationshipsPanel relationships={data.relationships} />
       <div className={styles.toolbar}><div className={styles.search}><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar na campanha..." aria-label="Buscar conteúdo da campanha" /></div><div className={styles.filters}><button type="button" className={`${styles.filter} ${activeType === 'ALL' ? styles.filterActive : ''}`} onClick={() => setActiveType('ALL')}>Todos</button>{types.map((type) => <button type="button" key={type} className={`${styles.filter} ${activeType === type ? styles.filterActive : ''}`} onClick={() => setActiveType(type)}>{FILE_TYPE_LABELS[type]}</button>)}</div></div>
 

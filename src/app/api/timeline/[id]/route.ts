@@ -6,7 +6,8 @@ import { timelineService } from '@/services/timelineService';
 const schema = z.object({
   title: z.string().min(1).max(160).optional(),
   happenedAt: z.string().datetime({ offset: true }).optional(),
-  fileId: z.string().nullable().optional()
+  fileId: z.string().nullable().optional(),
+  isPublished: z.boolean().optional()
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {

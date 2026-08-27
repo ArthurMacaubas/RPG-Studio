@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/ToastProvider';
 import type { FileType, PlayerAccessPreviewData, PlayerModeConfigData, PlayerVisibilityRow } from '@/types';
 import { FILE_TYPE_LABELS } from '@/types';
+import { CampaignBriefingEditor } from '@/components/CampaignBriefingEditor';
 import styles from './page.module.css';
 
 const publicationLabel = { PUBLIC: 'Público', GRANT: 'Grant', PRIVATE: 'Privado', ARCHIVED: 'Arquivado', UNAVAILABLE: 'Indisponível' } as const;
@@ -115,6 +116,8 @@ export default function PlayerModePage({ params }: { params: { id: string } }) {
 
   return <main className={styles.page}>
     <header className={styles.header}><div><div className={styles.eyebrow}>Publicação controlada</div><h1 className={styles.title}>Modo Jogador</h1><p className={styles.subtitle}>Monte uma vitrine segura da campanha. Só os arquivos publicados abaixo ficam visíveis para os jogadores.</p></div><Link href={`/campaigns/${campaignId}`} className={styles.backLink}>Voltar à campanha</Link></header>
+
+    <CampaignBriefingEditor campaignId={campaignId} />
 
     <Panel className={styles.publishPanel} eyebrow="Status de publicação" title={config.isEnabled ? 'A campanha está disponível' : 'A campanha está pausada'} action={<button type="button" className={`${styles.switch} ${config.isEnabled ? styles.switchOn : ''}`} onClick={() => void toggleEnabled()} aria-label="Ativar ou desativar Modo Jogador" aria-pressed={config.isEnabled}><span /></button>}>
       <div className={styles.publishBody}><div className={styles.publishSummary}><Badge tone={config.isEnabled ? 'success' : 'warning'}>{config.isEnabled ? 'Publicado' : 'Pausado'}</Badge><span>{visibleCount} de {files.length} arquivos publicados</span></div>{config.isEnabled && config.shareSlug ? <div className={styles.shareRow}><input readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/jogador/${config.shareSlug}`} aria-label="Link público da campanha" /><Button variant="secondary" size="sm" icon={copied ? <Check size={14} /> : <Copy size={14} />} onClick={() => void copyLink()}>{copied ? 'Copiado' : 'Copiar link'}</Button><Link href={`/jogador/${config.shareSlug}`} target="_blank" className={styles.previewLink}><ExternalLink size={13} /> Prévia</Link></div> : <p className={styles.publishHint}>Ative a publicação para gerar um link compartilhável.</p>}</div>

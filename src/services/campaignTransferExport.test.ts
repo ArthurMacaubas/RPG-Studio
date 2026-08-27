@@ -65,7 +65,8 @@ const state = vi.hoisted(() => {
       hypothesisLinks: Array<{ hypothesis: { id: string } }>;
       boardViewLinks: Array<{ view: { id: string } }>;
     }>,
-    timelineEvents: [],
+    briefing: null as null | { id: string; campaignId: string; title: string; body: string; isPublished: boolean; createdAt: Date; updatedAt: Date },
+    timelineEvents: [] as Array<{ title: string; happenedAt: Date; order: number; fileId: string | null; isPublished: boolean }>,
     boardNodes: [],
     boardEdges: [],
     investigationBoardPins: [] as Array<{ id: string; campaignId: string; text: string; x: number; y: number; color: string; createdAt: Date; updatedAt: Date }>,
@@ -100,6 +101,8 @@ describe('exportação administrativa e harness OWNER', () => {
     state.relationshipFindMany.mockResolvedValue([]);
     state.relationshipTypeFindMany.mockResolvedValue([]);
     state.assertCampaignRole.mockResolvedValue({ role: 'OWNER', user: { id: 'owner-1' } });
+    state.sourceCampaign.briefing = null;
+    state.sourceCampaign.timelineEvents = [];
     state.sourceCampaign.hypotheses = [];
   });
 
@@ -167,6 +170,16 @@ describe('exportação administrativa e harness OWNER', () => {
     const document = await exportCampaignAsOwner('campaign-1', 'owner-1');
 
     expect(document.sessions).toEqual([expect.objectContaining({ id: 'session-1', status: 'COMPLETED', completedAt: state.sourceDate.toISOString(), hypothesisIds: ['hypothesis-1'], viewIds: ['view-1'] })]);
+  });
+
+  it('exporta briefing e publicação explícita da timeline', async () => {
+    state.sourceCampaign.briefing = { id: 'briefing-1', campaignId: 'campaign-1', title: 'Mensagem do Mestre', body: 'Contexto curado.', isPublished: true, createdAt: state.sourceDate, updatedAt: state.sourceDate };
+    state.sourceCampaign.timelineEvents = [{ title: 'Marco publicado', happenedAt: state.sourceDate, order: 0, fileId: 'file-1', isPublished: true }];
+
+    const document = await exportCampaignAsOwner('campaign-1', 'owner-1');
+
+    expect(document.briefing).toEqual(expect.objectContaining({ title: 'Mensagem do Mestre', body: 'Contexto curado.', isPublished: true }));
+    expect(document.timelineEvents).toEqual([{ title: 'Marco publicado', happenedAt: state.sourceDate.toISOString(), order: 0, fileId: 'file-1', isPublished: true }]);
   });
 
   it('exporta hipóteses e evidências na projeção administrativa', async () => {

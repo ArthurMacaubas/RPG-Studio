@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { assertCampaignRole, assertFileAccess } from '@/lib/access';
+import { recordAudit } from '@/services/auditService';
 
 const timelineEventSelect = {
   id: true,
@@ -8,6 +9,7 @@ const timelineEventSelect = {
   title: true,
   happenedAt: true,
   order: true,
+  isPublished: true,
   fileId: true,
   file: { select: { id: true, name: true, type: true, isArchived: true, isTrashed: true } }
 } satisfies Prisma.TimelineEventSelect;
@@ -38,12 +40,23 @@ export const timelineService = {
     });
   },
 
-  async update(id: string, input: Partial<{ title: string; happenedAt: Date; fileId: string | null }>) {
+  async update(id: string, input: Partial<{ title: string; happenedAt: Date; fileId: string | null; isPublished: boolean }>) {
     const event = await prisma.timelineEvent.findUnique({ where: { id }, select: { campaignId: true } });
     if (!event) throw Object.assign(new Error('Evento da timeline não encontrado.'), { status: 404 });
-    await assertCampaignRole(event.campaignId, 'OWNER');
+    const access = await assertCampaignRole(event.campaignId, 'OWNER');
     if (input.fileId) await assertFileAccess(input.fileId, { campaignId: event.campaignId, write: true });
-    return prisma.timelineEvent.update({ where: { id }, data: input, select: timelineEventSelect });
+    const updated = await prisma.timelineEvent.update({ where: { id }, data: input, select: timelineEventSelect });
+    if (input.isPublished !== undefined) {
+      void recordAudit({
+        campaignId: event.campaignId,
+        actorId: access.user.id,
+        action: input.isPublished ? 'TIMELINE_EVENT_PUBLISHED' : 'TIMELINE_EVENT_UNPUBLISHED',
+        entityType: 'TimelineEvent',
+        entityId: id,
+        metadata: { isPublished: input.isPublished }
+      }).catch(() => undefined);
+    }
+    return updated;
   },
 
   async remove(id: string) {

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Plus, Pencil, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Pencil, Trash2, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TimelineEventModal } from '@/components/TimelineEventModal';
 import { timelineApi } from '@/lib/api';
+import { useToast } from '@/components/ui/ToastProvider';
 import type { TimelineEventItem } from '@/types';
 import styles from './page.module.css';
 
@@ -19,6 +20,7 @@ export default function TimelinePage() {
   const campaignId = params?.id ?? '';
   const [events, setEvents] = useState<TimelineEventItem[]>([]);
   const [modalEvent, setModalEvent] = useState<TimelineEventItem | 'new' | null>(null);
+  const { toast } = useToast();
 
   async function load() {
     setEvents(await timelineApi.list(campaignId));
@@ -32,6 +34,16 @@ export default function TimelinePage() {
   async function removeEvent(id: string) {
     await timelineApi.remove(id);
     load();
+  }
+
+  async function togglePublished(event: TimelineEventItem) {
+    try {
+      const updated = await timelineApi.update(event.id, { isPublished: !event.isPublished });
+      setEvents((current) => current.map((item) => item.id === updated.id ? updated : item));
+      toast({ tone: updated.isPublished ? 'success' : 'info', title: updated.isPublished ? 'Evento publicado' : 'Evento retirado', message: updated.isPublished ? 'O evento agora pode aparecer na timeline do jogador.' : 'O evento voltou a ser um rascunho privado.' });
+    } catch (error) {
+      toast({ tone: 'error', title: 'Não foi possível alterar a publicação', message: error instanceof Error ? error.message : 'Tente novamente.' });
+    }
   }
 
   return (
@@ -61,10 +73,14 @@ export default function TimelinePage() {
                 <div className={styles.eventTitleRow}>
                   <span className={styles.eventTitle}>{event.title}</span>
                   <div className={styles.eventActions}>
-                    <button className={styles.iconButton} onClick={() => setModalEvent(event)} aria-label="Editar evento">
+                    <button type="button" className={`${styles.publishButton} ${event.isPublished ? styles.publishButtonActive : ''}`} onClick={() => void togglePublished(event)} aria-pressed={event.isPublished} aria-label={event.isPublished ? 'Retirar evento da publicação' : 'Publicar evento'} title={event.isPublished ? 'Retirar da publicação' : 'Publicar evento'}>
+                      {event.isPublished ? <Eye size={13} /> : <EyeOff size={13} />}
+                      <span>{event.isPublished ? 'Publicado' : 'Rascunho'}</span>
+                    </button>
+                    <button type="button" className={styles.iconButton} onClick={() => setModalEvent(event)} aria-label="Editar evento">
                       <Pencil size={13} />
                     </button>
-                    <button className={styles.iconButton} onClick={() => removeEvent(event.id)} aria-label="Excluir evento">
+                    <button type="button" className={styles.iconButton} onClick={() => void removeEvent(event.id)} aria-label="Excluir evento">
                       <Trash2 size={13} />
                     </button>
                   </div>

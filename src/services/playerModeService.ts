@@ -4,6 +4,7 @@ import { recordAudit } from '@/services/auditService';
 import { relationshipService } from '@/services/relationshipService';
 import { randomBytes } from 'crypto';
 import { getPublicViewerContext, getViewerContext, publicationSelect, publicationStateOf, publishedFileWhere, type ViewerContext } from '@/lib/publicationPolicy';
+import { campaignBriefingService } from '@/services/campaignBriefingService';
 
 function playerRelationshipPayload(relationships: Array<{ id: string; fromId: string; toId: string; label: string | null; description: string | null; importance: 'CRITICAL' | 'IMPORTANT' | 'NORMAL' | 'OPTIONAL'; from: { name: string }; to: { name: string }; type: { key: string; name: string } }>) {
   return relationships.map((relationship) => ({ id: relationship.id, sourceId: relationship.fromId, targetId: relationship.toId, sourceName: relationship.from.name, targetName: relationship.to.name, type: { key: relationship.type.key, name: relationship.type.name }, label: relationship.label, description: relationship.description, importance: relationship.importance }));
@@ -74,10 +75,13 @@ export const playerModeService = {
     // A real player keeps the grants and audience-specific PLAYER projection.
     const previewViewer = viewer.kind === 'OWNER' ? await getPublicViewerContext(campaignId) : viewer;
     const files = await visibleFilesFor(previewViewer);
-    const relationships = previewViewer.kind === 'PUBLIC'
-      ? await relationshipService.listForPublic(campaignId, files.map((file) => file.id))
-      : await relationshipService.listForPlayer(campaignId, files.map((file) => file.id));
-    return { campaign: config?.campaign ?? null, files, relationships: playerRelationshipPayload(relationships) };
+    const [relationships, publicContent] = await Promise.all([
+      previewViewer.kind === 'PUBLIC'
+        ? relationshipService.listForPublic(campaignId, files.map((file) => file.id))
+        : relationshipService.listForPlayer(campaignId, files.map((file) => file.id)),
+      campaignBriefingService.getPublicSnapshot(previewViewer)
+    ]);
+    return { campaign: config?.campaign ?? null, files, relationships: playerRelationshipPayload(relationships), ...publicContent };
   },
 
   async previewForMember(campaignId: string, userId: string) {
@@ -127,7 +131,10 @@ export const playerModeService = {
     const viewer = await getPublicViewerContext(config.campaignId);
     const files = await visibleFilesFor(viewer);
 
-    const relationships = await relationshipService.listForPublic(config.campaignId, files.map((file) => file.id));
-    return { campaign: config.campaign, files, relationships: playerRelationshipPayload(relationships) };
+    const [relationships, publicContent] = await Promise.all([
+      relationshipService.listForPublic(config.campaignId, files.map((file) => file.id)),
+      campaignBriefingService.getPublicSnapshot(viewer)
+    ]);
+    return { campaign: config.campaign, files, relationships: playerRelationshipPayload(relationships), ...publicContent };
   }
 };

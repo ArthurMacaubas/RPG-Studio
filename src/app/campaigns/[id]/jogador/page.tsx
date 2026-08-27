@@ -11,6 +11,7 @@ import { FileTypeIcon } from '@/components/fileTypeIcon';
 import { PlayerCharacterPanel } from '@/components/PlayerCharacterPanel';
 import { PlayerCombatPanel } from '@/components/PlayerCombatPanel';
 import { PlayerRelationshipsPanel } from '@/components/PlayerRelationshipsPanel';
+import { PlayerBriefingTimeline } from '@/components/PlayerBriefingTimeline';
 import type { Attachment, CampaignFile, FileType, PublicCampaignData, SheetData } from '@/types';
 import { FILE_TYPE_LABELS, SYSTEM_LABELS } from '@/types';
 import styles from './page.module.css';
@@ -57,6 +58,7 @@ export default function AuthenticatedPlayerPage({ params }: { params: { id: stri
       <div className={styles.heroStats}><strong>{visibleFiles.length}</strong><span>itens liberados</span></div>
     </header>
 
+    <PlayerBriefingTimeline briefing={data.briefing} timeline={data.timeline} />
     <PlayerCharacterPanel campaignId={params.id} system={data.campaign.system} />
     <PlayerCombatPanel campaignId={params.id} />
     <PlayerRelationshipsPanel relationships={data.relationships} />

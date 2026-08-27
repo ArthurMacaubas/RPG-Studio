@@ -476,6 +476,23 @@ export function validateCampaignExportDocument(input: unknown): CampaignTransfer
     }
   }
 
+  const briefing = document.briefing;
+  if (briefing !== undefined && briefing !== null) {
+    const briefingPath = 'briefing';
+    if (!isRecord(briefing)) {
+      addValidationIssue(errors, issues, briefingPath, briefing, 'shape.briefing', 'briefing deve ser um objeto quando informado.');
+    } else {
+      if (!hasNonEmptyString(briefing.title)) addValidationIssue(errors, issues, `${briefingPath}.title`, briefing.title, 'required.briefing.title', 'briefing.title é obrigatório.');
+      if (typeof briefing.title === 'string' && briefing.title.trim().length > 160) addValidationIssue(errors, issues, `${briefingPath}.title`, briefing.title, 'max.briefing.title', 'briefing.title pode ter no máximo 160 caracteres.');
+      if (!hasNonEmptyString(briefing.body)) addValidationIssue(errors, issues, `${briefingPath}.body`, briefing.body, 'required.briefing.body', 'briefing.body é obrigatório.');
+      if (typeof briefing.body === 'string' && briefing.body.trim().length > 20000) addValidationIssue(errors, issues, `${briefingPath}.body`, briefing.body, 'max.briefing.body', 'briefing.body pode ter no máximo 20000 caracteres.');
+      if (briefing.isPublished !== undefined && typeof briefing.isPublished !== 'boolean') addValidationIssue(errors, issues, `${briefingPath}.isPublished`, briefing.isPublished, 'boolean.briefing.isPublished', 'briefing.isPublished deve ser booleano.');
+      if (briefing.createdAt !== undefined) validateExportDate(errors, issues, `${briefingPath}.createdAt`, briefing.createdAt);
+      if (briefing.updatedAt !== undefined) validateExportDate(errors, issues, `${briefingPath}.updatedAt`, briefing.updatedAt);
+      if (briefing.isPublished === true) warnings.push('A publicação do briefing será importada desativada e exigirá nova ação do Mestre.');
+    }
+  }
+
   const folders = asArray(document.favoriteFolders);
   for (const [index, folder] of folders.entries()) {
     if (!isRecord(folder) || !hasNonEmptyString(folder.name)) errors.push(`favoriteFolders[${index}] precisa conter name.`);
@@ -494,6 +511,7 @@ export function validateCampaignExportDocument(input: unknown): CampaignTransfer
     if (isRecord(event) && event.fileId !== null && event.fileId !== undefined && !fileIds.has(event.fileId)) {
       addValidationIssue(errors, issues, `timelineEvents[${index}].fileId`, event.fileId, 'reference.file.exists', `timelineEvents[${index}].fileId referencia um arquivo inexistente.`);
     }
+    if (isRecord(event) && event.isPublished !== undefined && typeof event.isPublished !== 'boolean') addValidationIssue(errors, issues, `timelineEvents[${index}].isPublished`, event.isPublished, 'boolean.timelineEvent.isPublished', `timelineEvents[${index}].isPublished deve ser booleano.`);
   }
 
   const board = isRecord(document.board) ? document.board : {};
@@ -701,6 +719,7 @@ async function loadExportSource(campaignId: string, ownerId: string) {
       investigationBoardGroups: { orderBy: { createdAt: 'asc' }, include: { items: { orderBy: { createdAt: 'asc' }, include: { boardNode: { select: { fileId: true } } } } } },
       investigationBoardViews: { orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] },
       playerModeConfig: true,
+      briefing: true,
       hypotheses: {
         orderBy: { createdAt: 'asc' },
         include: {
@@ -818,6 +837,13 @@ function buildExportDocument(source: NonNullable<ExportSource>): CampaignExportD
       isCollapsed: folder.isCollapsed,
       entries: folder.entries.map((entry) => ({ fileId: entry.fileId, order: entry.order }))
     })),
+    briefing: campaign.briefing ? {
+      title: campaign.briefing.title,
+      body: campaign.briefing.body,
+      isPublished: campaign.briefing.isPublished,
+      createdAt: campaign.briefing.createdAt.toISOString(),
+      updatedAt: campaign.briefing.updatedAt.toISOString()
+    } : null,
     sessions: campaign.sessions.map((session) => ({
       id: session.id,
       name: session.name,
@@ -838,7 +864,8 @@ function buildExportDocument(source: NonNullable<ExportSource>): CampaignExportD
       title: event.title,
       happenedAt: event.happenedAt.toISOString(),
       order: event.order,
-      fileId: event.fileId
+      fileId: event.fileId,
+      isPublished: event.isPublished
     })),
     board: {
       nodes: campaign.boardNodes.map((node) => ({ fileId: node.fileId, x: node.x, y: node.y })),
@@ -1176,6 +1203,17 @@ export async function importCampaign(ownerId: string, input: unknown, options: {
       }
     }
 
+    if (document.briefing && isRecord(document.briefing)) {
+      await tx.campaignBriefing.create({
+        data: {
+          campaignId: campaign.id,
+          title: document.briefing.title,
+          body: document.briefing.body,
+          isPublished: false
+        }
+      });
+    }
+
     for (const [eventIndex, event] of document.timelineEvents.entries()) {
       await tx.timelineEvent.create({
         data: {
@@ -1183,7 +1221,8 @@ export async function importCampaign(ownerId: string, input: unknown, options: {
           title: event.title,
           happenedAt: dateFromValidated(event.happenedAt, `timelineEvents[${eventIndex}].happenedAt`),
           order: event.order,
-          fileId: event.fileId ? fileIds.get(event.fileId) ?? null : null
+          fileId: event.fileId ? fileIds.get(event.fileId) ?? null : null,
+          isPublished: false
         }
       });
     }

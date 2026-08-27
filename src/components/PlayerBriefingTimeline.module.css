@@ -1,0 +1,159 @@
+.wrapper {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 24px;
+}
+
+.briefing,
+.timeline {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 7%);
+}
+
+.briefing {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 12%, var(--color-surface)), var(--color-surface));
+}
+
+.heading,
+.timelineHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.heading {
+  justify-content: flex-start;
+}
+
+.icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.heading h2,
+.timelineHeading h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.body {
+  max-width: 72ch;
+  margin: 16px 0 0 48px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.timelineCount {
+  flex: 0 0 auto;
+  color: var(--color-text-faint);
+  font-size: 11px;
+}
+
+.events {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.events::before {
+  position: absolute;
+  top: 11px;
+  bottom: 11px;
+  left: 15px;
+  width: 1px;
+  background: var(--color-border);
+  content: '';
+}
+
+.event {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.dot {
+  z-index: 1;
+  display: grid;
+  flex: 0 0 auto;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-accent);
+  background: var(--color-surface);
+}
+
+.eventCard {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 1px 0 9px;
+}
+
+.eventCard time {
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.eventCard strong {
+  color: var(--color-text);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.reference {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  .briefing,
+  .timeline {
+    padding: 16px;
+  }
+
+  .body {
+    margin-left: 0;
+  }
+
+  .timelineHeading {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapper * {
+    scroll-behavior: auto;
+  }
+}

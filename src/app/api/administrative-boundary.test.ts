@@ -82,6 +82,14 @@ describe('V20.2 administrative API boundary', () => {
     expect(await response.text()).not.toContain('Referência particular');
   });
 
+  it('encaminha ao serviço OWNER a publicação explícita de timeline', async () => {
+    mocks.timelineUpdate.mockResolvedValue({ id: 'event-1', isPublished: true });
+    const response = await patchTimeline(new Request('http://localhost/api/timeline/event-1', { method: 'PATCH', body: JSON.stringify({ isPublished: true }) }) as never, eventParams);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ id: 'event-1', isPublished: true });
+    expect(mocks.timelineUpdate).toHaveBeenCalledWith('event-1', { isPublished: true });
+  });
+
   it('retorna ao OWNER apenas a projeção explícita de timeline', async () => {
     mocks.timelineList.mockResolvedValue([{ id: 'event-1', campaignId: 'campaign-1', title: 'Evento público', happenedAt: new Date('2026-01-01T00:00:00.000Z'), order: 0, fileId: 'file-1', file: { id: 'file-1', name: 'Pista', type: 'CLUE', isArchived: false, isTrashed: false } }]);
     const response = await getTimeline(request, params);

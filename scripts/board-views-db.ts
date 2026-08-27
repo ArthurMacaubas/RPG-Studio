@@ -79,7 +79,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  const message = error instanceof Error ? error.message.replace(/q5-[a-z0-9-]+/gi, '[temp-id]').replace(/postgres(ql)?:\/\/[^\s]+/gi, 'postgresql://[redacted]') : 'unknown error';
+  const message = error instanceof Error ? error.message.replace(/q5-[a-z0-9-]+/gi, '[temp-id]').replace(/postgres(ql)?:\/\/[^\s]+/gi, '[database-redacted]') : 'unknown error';
   console.error(`[Q5_DB_TEST_FAILED] ${error instanceof Error ? error.name : 'UnknownError'}: ${message}`);
   process.exitCode = 1;
 });

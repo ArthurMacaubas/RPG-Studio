@@ -31,13 +31,10 @@ const publishedFileSelect = {
 export const publicationSelect = {
   file: publishedFileSelect,
   campaign: {
-    id: true,
     name: true,
     description: true,
     system: true,
-    coverImage: true,
-    createdAt: true,
-    updatedAt: true
+    coverImage: true
   } satisfies Prisma.CampaignSelect
 };
 
@@ -106,13 +103,14 @@ export async function getViewerContext(campaignId: string, options: { requirePla
   ]);
 
   if (!member) throw new AccessDeniedError('Acesso não autorizado.', 404);
+  if (access.campaign.isArchived) throw new AccessDeniedError('Acesso não autorizado.', 404);
   if (options.requirePlayerMode && !config?.isEnabled) throw new AccessDeniedError('Modo Jogador indisponível.', 404);
   return { kind: 'PLAYER', campaignId, userId: access.user.id, audience: member.audience };
 }
 
 export async function getPublicViewerContext(campaignId: string): Promise<Extract<ViewerContext, { kind: 'PUBLIC' }>> {
-  const config = await prisma.playerModeConfig.findUnique({ where: { campaignId }, select: { isEnabled: true } });
-  if (!config?.isEnabled) throw new AccessDeniedError('Modo Jogador indisponível.', 404);
+  const config = await prisma.playerModeConfig.findUnique({ where: { campaignId }, select: { isEnabled: true, campaign: { select: { isArchived: true } } } });
+  if (!config?.isEnabled || config.campaign.isArchived) throw new AccessDeniedError('Modo Jogador indisponível.', 404);
   return { kind: 'PUBLIC', campaignId };
 }
 

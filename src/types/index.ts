@@ -430,8 +430,21 @@ export interface TimelineEventItem {
   title: string;
   happenedAt: string;
   order: number;
+  createdAt?: string;
+  isPublished: boolean;
   fileId: string | null;
   file?: CampaignFile | null;
+}
+
+export interface PublicBriefing {
+  title: string;
+  body: string;
+}
+
+export interface PublicTimelineEvent {
+  title: string;
+  happenedAt: string;
+  file: { name: string; type: FileType } | null;
 }
 
 export interface BoardNodeItem {
@@ -517,10 +530,19 @@ export interface PlayerAccessPreviewData {
   grantCount: number;
 }
 
+export interface PublicCampaignSummary {
+  name: string;
+  description: string | null;
+  system: SystemType;
+  coverImage: string | null;
+}
+
 export interface PublicCampaignData {
-  campaign: Campaign;
+  campaign: PublicCampaignSummary;
   files: CampaignFile[];
   relationships: PlayerRelationship[];
+  briefing: PublicBriefing | null;
+  timeline: PublicTimelineEvent[];
 }
 
 export interface PlayerRelationship {
@@ -637,11 +659,20 @@ export interface CampaignExportSession {
   viewIds?: string[];
 }
 
+export interface CampaignExportBriefing {
+  title: string;
+  body: string;
+  isPublished: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface CampaignExportTimelineEvent {
   title: string;
   happenedAt: string;
   order: number;
   fileId: string | null;
+  isPublished?: boolean;
 }
 
 export interface CampaignExportBoardNode {
@@ -804,6 +835,7 @@ export interface CampaignExportDocument {
   relationshipTypes?: CampaignExportRelationshipType[];
   favoriteFolders: CampaignExportFavoriteFolder[];
   sessions: CampaignExportSession[];
+  briefing?: CampaignExportBriefing | null;
   timelineEvents: CampaignExportTimelineEvent[];
   board: {
     nodes: CampaignExportBoardNode[];

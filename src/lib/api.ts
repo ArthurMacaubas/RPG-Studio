@@ -486,6 +486,28 @@ export const relationshipTypesApi = {
   }
 };
 
+export interface CampaignBriefingAdmin {
+  id: string;
+  campaignId: string;
+  title: string;
+  body: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const briefingApi = {
+  get(campaignId: string) {
+    return request<{ briefing: CampaignBriefingAdmin | null }>(`/api/campaigns/${campaignId}/briefing`);
+  },
+  save(campaignId: string, input: { title: string; body: string }) {
+    return request<CampaignBriefingAdmin>(`/api/campaigns/${campaignId}/briefing`, { method: 'PUT', body: JSON.stringify(input) });
+  },
+  setPublished(campaignId: string, isPublished: boolean) {
+    return request<CampaignBriefingAdmin>(`/api/campaigns/${campaignId}/briefing`, { method: 'POST', body: JSON.stringify({ isPublished }) });
+  }
+};
+
 export const timelineApi = {
   list(campaignId: string) {
     return request<TimelineEventItem[]>(`/api/campaigns/${campaignId}/timeline`);
@@ -496,7 +518,7 @@ export const timelineApi = {
       body: JSON.stringify(input)
     });
   },
-  update(id: string, input: Partial<{ title: string; happenedAt: string; fileId: string | null }>) {
+  update(id: string, input: Partial<{ title: string; happenedAt: string; fileId: string | null; isPublished: boolean }>) {
     return request<TimelineEventItem>(`/api/timeline/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
   },
   remove(id: string) {

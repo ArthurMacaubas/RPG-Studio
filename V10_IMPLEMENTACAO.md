@@ -32,7 +32,7 @@ npx prisma migrate status
 
 ## Validação executada
 
-- `DATABASE_URL=[redacted]
+- Variáveis de ambiente mantidas fora do repositório
 - `npx tsc --noEmit -p .`
 - `npx next lint --dir src`
 - `npm test -- --run` — 15 testes passando

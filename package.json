@@ -24,7 +24,8 @@
     "test:db:relationship-cross-campaign": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/relationship-cross-campaign-db.ts",
     "test:db:hypotheses": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/hypotheses-db.ts",
     "test:db:board-views": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/board-views-db.ts",
-    "test:db:session-planning": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/session-planning-q08-db.ts"
+    "test:db:session-planning": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/session-planning-q08-db.ts",
+    "test:db:q09-public-briefing-timeline": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/q09-public-briefing-timeline-db.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
