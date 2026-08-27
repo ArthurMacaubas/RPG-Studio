@@ -193,3 +193,13 @@
 .pathSelectButton { width: fit-content; padding: 0; border: 0; background: transparent; color: var(--color-text-muted); font: inherit; font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); text-decoration: underline; text-decoration-color: transparent; cursor: pointer; }
 .pathSelectButton:hover, .pathSelectButton[aria-pressed='true'] { color: var(--color-accent); text-decoration-color: currentColor; }
 .pathSelectButton:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.contextBanner { position: absolute; z-index: 8; top: var(--space-3); left: 50%; display: flex; max-width: min(640px, calc(100% - 24px)); transform: translateX(-50%); align-items: center; gap: 10px; padding: 9px 11px; border: 1px solid var(--color-accent); border-radius: var(--radius-md); background: var(--color-surface-elevated); box-shadow: 0 12px 32px rgba(0, 0, 0, .28); }
+.contextBanner > div { display: grid; gap: 2px; min-width: 0; }
+.contextBanner strong { color: var(--color-text); font-size: var(--font-size-small); }
+.contextBanner span { color: var(--color-text-faint); font-size: var(--font-size-caption); }
+.contextBannerAction, .contextBannerClose { min-height: 30px; padding: 0 9px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font: inherit; font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); cursor: pointer; white-space: nowrap; }
+.contextBannerAction { border-color: var(--color-accent); background: var(--color-accent-muted); color: var(--color-accent); }
+.contextBannerClose { background: transparent; color: var(--color-text-muted); }
+.contextBannerAction:focus-visible, .contextBannerClose:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+@media (max-width: 720px) { .contextBanner { top: var(--space-2); flex-wrap: wrap; } .contextBanner > div { flex: 1 1 100%; } }
+@media (prefers-reduced-motion: reduce) { .contextBanner { transition: none; } }

@@ -6,6 +6,8 @@ import { Check, ClipboardList, ExternalLink, Plus, Save, Trash2 } from 'lucide-r
 import { filesApi, hypothesesApi, sessionPlansApi, boardViewsApi } from '@/lib/api';
 import type { CampaignFile, InvestigationBoardViewItem, InvestigationHypothesis, SessionPlanItem, SessionPlanning } from '@/types';
 import styles from './sessionPlanning.module.css';
+import SessionContextPanel from './SessionContextPanel';
+import { findPreviousSession, orderSessionPlans } from './sessionContextSelectors';
 
 type ItemKey = 'checklist' | 'objectives' | 'agenda';
 type Draft = Omit<SessionPlanning, 'id' | 'campaignId' | 'files' | 'hypotheses' | 'views' | 'completedAt'> & { id: string; completedAt: string | null };
@@ -57,6 +59,7 @@ export default function SessionPlanningPanel({ campaignId }: { campaignId: strin
   const [error, setError] = useState('');
 
   const selectedPlan = useMemo(() => plans.find((plan) => plan.id === selectedId) ?? null, [plans, selectedId]);
+  const previousPlan = useMemo(() => findPreviousSession(plans, selectedId), [plans, selectedId]);
 
   async function load() {
     setLoading(true);
@@ -68,13 +71,14 @@ export default function SessionPlanningPanel({ campaignId }: { campaignId: strin
         hypothesesApi.list(campaignId),
         boardViewsApi.list(campaignId)
       ]);
-      setPlans(nextPlans);
+      const orderedPlans = orderSessionPlans(nextPlans);
+      setPlans(orderedPlans);
       setFiles(nextFiles);
       setHypotheses(nextHypotheses);
       setViews(nextViews.views);
-      const nextId = selectedId && nextPlans.some((plan) => plan.id === selectedId) ? selectedId : nextPlans[0]?.id ?? '';
+      const nextId = selectedId && orderedPlans.some((plan) => plan.id === selectedId) ? selectedId : orderedPlans[0]?.id ?? '';
       setSelectedId(nextId);
-      setDraft(nextPlans.find((plan) => plan.id === nextId) ? toDraft(nextPlans.find((plan) => plan.id === nextId)!) : null);
+      setDraft(orderedPlans.find((plan) => plan.id === nextId) ? toDraft(orderedPlans.find((plan) => plan.id === nextId)!) : null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Não foi possível carregar os planejamentos administrativos.');
     } finally {
@@ -95,6 +99,13 @@ export default function SessionPlanningPanel({ campaignId }: { campaignId: strin
     setError('');
   }
 
+  function scrollToPlanning() {
+    const target = document.getElementById('session-planning-editor');
+    if (!target) return;
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    target.scrollIntoView({ behavior, block: 'start' });
+  }
+
   async function createPlan(event: React.FormEvent) {
     event.preventDefault();
     if (!newName.trim()) return;
@@ -102,7 +113,7 @@ export default function SessionPlanningPanel({ campaignId }: { campaignId: strin
     setError('');
     try {
       const plan = await sessionPlansApi.create(campaignId, { name: newName.trim(), checklist: [], objectives: [], agenda: [], fileIds: [], hypothesisIds: [], viewIds: [] });
-      setPlans((current) => [...current, plan]);
+      setPlans((current) => orderSessionPlans([...current, plan]));
       setSelectedId(plan.id);
       setDraft(toDraft(plan));
       setNewName('');
@@ -133,7 +144,7 @@ export default function SessionPlanningPanel({ campaignId }: { campaignId: strin
         hypothesisIds: draftHypotheses,
         viewIds: draftViews
       });
-      setPlans((current) => current.map((plan) => plan.id === updated.id ? updated : plan));
+      setPlans((current) => orderSessionPlans(current.map((plan) => plan.id === updated.id ? updated : plan)));
       setDraft(toDraft(updated));
       setMessage(status === 'COMPLETED' ? 'Sessão concluída; o planejamento continua privado.' : 'Planejamento salvo.');
     } catch (cause) {
@@ -186,7 +197,7 @@ export default function SessionPlanningPanel({ campaignId }: { campaignId: strin
 
   function setLinked(kind: 'files' | 'hypotheses' | 'views', values: string[]) {
     if (!draft) return;
-    const nextPlan = kind === 'files' ? { ...selectedPlan!, files: files.filter((file) => values.includes(file.id)).map((file) => ({ id: file.id, name: file.name, type: file.type })) } : kind === 'hypotheses' ? { ...selectedPlan!, hypotheses: hypotheses.filter((item) => values.includes(item.id)).map((item) => ({ id: item.id, title: item.title, status: item.status })) } : { ...selectedPlan!, views: views.filter((view) => values.includes(view.id)).map((item) => ({ id: item.id, name: item.name, kind: item.kind })) };
+    const nextPlan = kind === 'files' ? { ...selectedPlan!, files: files.filter((file) => values.includes(file.id)).map((file) => ({ id: file.id, name: file.name, type: file.type, isArchived: file.isArchived, isTrashed: file.isTrashed })) } : kind === 'hypotheses' ? { ...selectedPlan!, hypotheses: hypotheses.filter((item) => values.includes(item.id)).map((item) => ({ id: item.id, title: item.title, status: item.status })) } : { ...selectedPlan!, views: views.filter((view) => values.includes(view.id)).map((item) => ({ id: item.id, name: item.name, kind: item.kind })) };
     setPlans((current) => current.map((item) => item.id === draft.id ? nextPlan : item));
   }
 
@@ -200,7 +211,14 @@ export default function SessionPlanningPanel({ campaignId }: { campaignId: strin
       </div>
       {error && <p className={styles.error} role="alert">{error}</p>}
       {message && <p className={styles.success} role="status">{message}</p>}
-      <div className={styles.layout}>
+      <SessionContextPanel
+        campaignId={campaignId}
+        selectedPlan={selectedPlan}
+        previousPlan={previousPlan}
+        onSelectPlan={selectPlan}
+        onResumePlanning={scrollToPlanning}
+      />
+      <div className={styles.layout} id="session-planning-editor">
         <aside className={styles.list} aria-label="Planejamentos existentes">
           <form className={styles.createForm} onSubmit={createPlan}><label htmlFor="new-session-plan">Novo planejamento</label><div className={styles.inline}><input id="new-session-plan" value={newName} onChange={(event) => setNewName(event.target.value)} maxLength={160} placeholder="Ex.: Sessão 01 — investigação" /><button type="submit" disabled={busy || !newName.trim()} aria-label="Criar planejamento"><Plus size={15} /></button></div></form>
           {plans.length === 0 ? <p className={styles.muted}>Nenhum planejamento administrativo ainda.</p> : <div className={styles.planList}>{plans.map((plan) => <button type="button" key={plan.id} className={`${styles.planButton} ${selectedId === plan.id ? styles.planButtonActive : ''}`} onClick={() => selectPlan(plan.id)}><strong>{plan.name}</strong><small>{plan.status === 'COMPLETED' ? 'Concluída' : 'Rascunho'} · {plan.objectives.length} objetivos</small></button>)}</div>}

@@ -283,15 +283,17 @@ export const relationshipService = {
     return { outgoing, incoming };
   },
 
-  async getGraph(campaignId: string) {
+  async getGraph(campaignId: string, requestedFileIds?: string[]) {
     const viewer = await getRelationshipViewer(campaignId);
-    const fileIds = await accessibleFileIds(viewer);
+    const requested = requestedFileIds === undefined ? null : [...new Set(requestedFileIds)];
+    const accessible = await accessibleFileIds(viewer);
+    const fileIds = requested === null ? accessible : accessible === null ? requested : requested.filter((fileId) => accessible.includes(fileId));
     const files = await prisma.campaignFile.findMany({
       where: {
         campaignId,
         isArchived: false,
         isTrashed: false,
-        ...(fileIds ? { id: { in: fileIds } } : {})
+        ...(fileIds !== null ? { id: { in: fileIds } } : {})
       },
       select: { id: true, name: true, type: true }
     });

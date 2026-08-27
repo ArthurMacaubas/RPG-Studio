@@ -47,7 +47,7 @@ type SessionWithPlanning = Prisma.SessionGetPayload<{ include: typeof sessionInc
 type Tx = Prisma.TransactionClient;
 
 const sessionInclude = {
-  files: { orderBy: { file: { name: 'asc' as const } }, include: { file: { select: { id: true, name: true, type: true } } } },
+  files: { orderBy: { file: { name: 'asc' as const } }, include: { file: { select: { id: true, name: true, type: true, isArchived: true, isTrashed: true } } } },
   hypothesisLinks: { orderBy: { hypothesis: { title: 'asc' as const } }, include: { hypothesis: { select: { id: true, title: true, status: true } } } },
   boardViewLinks: { orderBy: { view: { order: 'asc' as const } }, include: { view: { select: { id: true, name: true, kind: true } } } }
 } satisfies Prisma.SessionInclude;

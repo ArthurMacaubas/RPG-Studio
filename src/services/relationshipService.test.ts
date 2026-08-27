@@ -261,4 +261,31 @@ describe('relationshipService', () => {
       where: { campaignId: 'campaign-1', fromId: { in: ['file-a'] }, toId: { in: ['file-a'] } }
     }));
   });
+
+  it('limita getGraph() do mestre aos IDs de fichas solicitados', async () => {
+    mocks.campaignFileFindMany.mockResolvedValue([{ id: 'file-a', name: 'Pista A', type: 'CLUE' }]);
+    mocks.relationshipFindMany.mockResolvedValue([]);
+
+    await relationshipService.getGraph('campaign-1', ['file-a', 'file-a', 'file-b']);
+
+    expect(mocks.campaignFileFindMany).toHaveBeenCalledWith({
+      where: { campaignId: 'campaign-1', isArchived: false, isTrashed: false, id: { in: ['file-a', 'file-b'] } },
+      select: { id: true, name: true, type: true }
+    });
+  });
+
+  it('revalida o subconjunto solicitado para jogador antes de montar o grafo', async () => {
+    mocks.getCampaignAccess.mockResolvedValue({ role: 'PLAYER', user: { id: 'player-1' } });
+    mocks.campaignMemberFindUnique.mockResolvedValue({ audience: 'P1' });
+    mocks.campaignFileFindMany.mockReset();
+    mocks.campaignFileFindMany.mockResolvedValueOnce([{ id: 'file-a' }]).mockResolvedValueOnce([{ id: 'file-a', name: 'Pista A', type: 'CLUE' }]);
+    mocks.relationshipFindMany.mockResolvedValue([]);
+
+    await relationshipService.getGraph('campaign-1', ['file-a', 'file-private']);
+
+    expect(mocks.campaignFileFindMany).toHaveBeenNthCalledWith(2, {
+      where: { campaignId: 'campaign-1', isArchived: false, isTrashed: false, id: { in: ['file-a'] } },
+      select: { id: true, name: true, type: true }
+    });
+  });
 });

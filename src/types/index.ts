@@ -417,7 +417,7 @@ export interface SessionPlanning {
   status: SessionPlanningStatus;
   completedAt: string | null;
   order: number;
-  files: Array<Pick<CampaignFile, 'id' | 'name' | 'type'>>;
+  files: Array<Pick<CampaignFile, 'id' | 'name' | 'type' | 'isArchived' | 'isTrashed'>>;
   hypotheses: Array<Pick<InvestigationHypothesis, 'id' | 'title' | 'status'>>;
   views: Array<Pick<InvestigationBoardViewItem, 'id' | 'name' | 'kind'>>;
 }

@@ -21,6 +21,7 @@ import { findInvestigationPaths, type InvestigationPathsResult, type PathMode } 
 import { FILE_TYPE_LABELS } from '@/types';
 import { computeInvestigativeDiagnostics } from '@/services/investigativeDiagnostics';
 import InvestigationDiagnosticsPanel from './InvestigationDiagnosticsPanel';
+import { parseContextTargetId } from '../sessoes/sessionContextSelectors';
 import styles from './page.module.css';
 
 const EDGE_COLORS = ['#de7d78', '#e5ac68', '#88c799', '#c8a66a', '#86aaa2', '#edf3ee'];
@@ -34,8 +35,9 @@ export default function InvestigationBoardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const campaignId = params?.id ?? '';
-  const requestedViewId = searchParams?.get('viewId');
-  const requestedHypothesisId = searchParams?.get('hypothesisId');
+  const requestedViewId = parseContextTargetId(searchParams?.get('viewId'));
+  const requestedHypothesisId = parseContextTargetId(searchParams?.get('hypothesisId'));
+  const requestedFileId = parseContextTargetId(searchParams?.get('fileId'));
 
   const [nodes, setNodes] = useState<BoardNodeItem[]>([]);
   const [edges, setEdges] = useState<BoardEdgeItem[]>([]);
@@ -51,6 +53,7 @@ export default function InvestigationBoardPage() {
   const [investigationFilters, setInvestigationFilters] = useState<BoardInvestigationFilters>({ presence: 'ALL', usedAsEvidence: false, inOpenHypothesis: false, importantRelationship: false });
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [focusHypothesisId, setFocusHypothesisId] = useState<string | null>(null);
+  const [pendingFileFocusId, setPendingFileFocusId] = useState<string | null>(null);
   const [allFiles, setAllFiles] = useState<CampaignFile[]>([]);
   const [officialRelationships, setOfficialRelationships] = useState<Awaited<ReturnType<typeof relationshipsApi.graph>>['edges']>([]);
   const [officialRelationshipFiles, setOfficialRelationshipFiles] = useState<Awaited<ReturnType<typeof relationshipsApi.graph>>['nodes']>([]);
@@ -88,6 +91,7 @@ export default function InvestigationBoardPage() {
     originY: 0
   });
   const dragState = useRef<{ nodeId: string; startX: number; startY: number; nodeX: number; nodeY: number } | null>(null);
+  const handledFileRequest = useRef<string | null>(null);
 
   async function load() {
     try {
@@ -336,6 +340,7 @@ export default function InvestigationBoardPage() {
     setHighlightedFileIds(new Set());
     setFocusHypothesisId(null);
     setSelectedOfficialRelationshipId(null);
+    setPendingFileFocusId(null);
   }, []);
 
   const toggleDiagnostics = useCallback(() => {
@@ -532,6 +537,9 @@ export default function InvestigationBoardPage() {
     setActiveViewId(view.id);
     setActiveViewAnnotationIds({ pinIds: new Set(view.snapshot.pinIds), groupIds: new Set(view.snapshot.groupIds) });
     setHighlightedFileIds(new Set());
+    setFocusHypothesisId(null);
+    setPendingFileFocusId(null);
+    setSelectedOfficialRelationshipId(null);
     toast({ tone: 'info', title: `Vista restaurada: ${view.name}`, message: 'Somente a navegação local foi alterada; o quadro canônico não foi modificado.' });
   }
 
@@ -551,10 +559,34 @@ export default function InvestigationBoardPage() {
     const hypothesis = hypotheses.find((item) => item.id === requestedHypothesisId);
     if (!hypothesis) return;
     setShowHypotheses(true);
+    setFocusHypothesisId(requestedHypothesisId);
+    setPendingFileFocusId(null);
     setFilters((current) => ({ ...current, layers: { ...current.layers, hypotheses: true, evidence: true } }));
     setHighlightedFileIds(new Set(hypothesis.evidence.map((item) => item.fileId)));
     toast({ tone: 'info', title: `Hipótese destacada: ${hypothesis.title}`, message: 'O destaque usa evidências locais e não altera a hipótese nem as relações oficiais.' });
   }, [requestedHypothesisId, hypotheses, toast]);
+
+  useEffect(() => {
+    if (!requestedFileId) {
+      handledFileRequest.current = null;
+      return;
+    }
+    if (handledFileRequest.current === requestedFileId || (nodes.length === 0 && allFiles.length === 0)) return;
+    handledFileRequest.current = requestedFileId;
+    if (nodes.some((node) => node.fileId === requestedFileId)) {
+      setFocusHypothesisId(null);
+      setPendingFileFocusId(null);
+      focusFile(requestedFileId);
+      toast({ tone: 'info', title: 'Ficha focada no quadro', message: 'O foco é transitório e não altera o canvas.' });
+      return;
+    }
+    if (allFiles.some((file) => file.id === requestedFileId)) {
+      setFocusHypothesisId(null);
+      setPendingFileFocusId(requestedFileId);
+      setShowFilters(true);
+      toast({ tone: 'info', title: 'Ficha fora do canvas', message: 'Use a ação Adicionar ao quadro para criar um nó explicitamente.' });
+    }
+  }, [allFiles, focusFile, nodes, requestedFileId, toast]);
 
   useEffect(() => {
     if (selectedOfficialRelationshipId && !selectedOfficialRelationship) setSelectedOfficialRelationshipId(null);
@@ -780,6 +812,14 @@ export default function InvestigationBoardPage() {
         onMouseDown={onWrapMouseDown}
         onWheel={onWheel}
       >
+        {pendingFileFocusId && allFiles.some((file) => file.id === pendingFileFocusId) && (
+          <div className={styles.contextBanner} role="status">
+            <div><strong>Ficha vinculada fora do canvas.</strong><span>O quadro não cria nós automaticamente.</span></div>
+            <button type="button" className={styles.contextBannerAction} onClick={() => void addEvidenceToBoard(pendingFileFocusId).then(() => setPendingFileFocusId(null)).catch(() => undefined)}>Adicionar ao quadro</button>
+            <button type="button" className={styles.contextBannerClose} onClick={() => setPendingFileFocusId(null)} aria-label="Dispensar aviso de ficha fora do canvas">Dispensar</button>
+          </div>
+        )}
+
         {nodes.length === 0 ? (
           <div className={styles.emptyHint} role="status">
             Arraste arquivos para cá — clique em &quot;Adicionar&quot; para escolher o primeiro.

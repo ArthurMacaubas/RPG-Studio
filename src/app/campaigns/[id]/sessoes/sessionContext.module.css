@@ -1,0 +1,403 @@
+.panel {
+  margin: 18px auto 0;
+  max-width: 1420px;
+  padding: 20px 24px;
+  border: 1px solid rgba(151, 166, 161, 0.24);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(24, 34, 35, 0.98), rgba(16, 24, 26, 0.98));
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+  color: #edf4ec;
+}
+
+.heading,
+.sessionMeta,
+.sectionHeading,
+.resourceRow,
+.continuityCard,
+.sectionHeading > div,
+.sessionMeta > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.heading,
+.sessionMeta,
+.sectionHeading,
+.resourceRow {
+  justify-content: space-between;
+}
+
+.eyebrow,
+.cardEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #c9a96b;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heading h2 {
+  margin: 7px 0 0;
+  color: #f1f4ed;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+}
+
+.intro,
+.sectionHeading p,
+.continuityCard p,
+.summaryBlock p,
+.emptyCopy,
+.loadingCopy,
+.unavailableCopy,
+.footerNote {
+  color: #9caeaa;
+  line-height: 1.55;
+}
+
+.intro {
+  max-width: 850px;
+  margin: 8px 0 0;
+}
+
+.collapseButton,
+.secondaryButton,
+.textButton,
+.resourceActions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 8px;
+  color: #e8ce98;
+  background: rgba(201, 169, 107, 0.12);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+}
+
+.collapseButton,
+.secondaryButton {
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+.collapseButton:hover,
+.secondaryButton:hover,
+.textButton:hover,
+.resourceActions a:hover {
+  background: rgba(201, 169, 107, 0.22);
+}
+
+.collapseButton:focus-visible,
+.secondaryButton:focus-visible,
+.textButton:focus-visible,
+.resourceActions a:focus-visible {
+  outline: 2px solid #e4bd73;
+  outline-offset: 2px;
+}
+
+.body {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.sessionMeta {
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid rgba(151, 166, 161, 0.2);
+  border-radius: 12px;
+  background: rgba(9, 15, 17, 0.38);
+}
+
+.sessionMeta > div {
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sessionMeta strong {
+  font-size: 1rem;
+}
+
+.sessionMeta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #9caeaa;
+  font-size: 0.8rem;
+}
+
+.continuityGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.continuityCard {
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid rgba(151, 166, 161, 0.2);
+  border-radius: 12px;
+  background: rgba(9, 15, 17, 0.38);
+}
+
+.continuityCard > strong {
+  font-size: 1rem;
+}
+
+.continuityCard > span:not(.cardEyebrow),
+.resourceInfo span,
+.resourceRow p,
+.contextCount {
+  color: #a7b8b1;
+  font-size: 0.78rem;
+}
+
+.continuityCard p {
+  margin: 4px 0;
+  font-size: 0.82rem;
+}
+
+.textButton {
+  align-self: flex-start;
+  padding: 6px 8px;
+  font-size: 0.78rem;
+}
+
+.section {
+  padding: 15px;
+  border: 1px solid rgba(151, 166, 161, 0.2);
+  border-radius: 12px;
+  background: rgba(9, 15, 17, 0.32);
+}
+
+.sectionHeading {
+  align-items: center;
+}
+
+.sectionHeading > div {
+  min-width: 0;
+}
+
+.sectionHeading > div > div {
+  min-width: 0;
+}
+
+.sectionHeading h3 {
+  margin: 0;
+  color: #e4eee5;
+  font-size: 0.98rem;
+}
+
+.sectionHeading p {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+}
+
+.sectionHeading > strong {
+  min-width: 24px;
+  color: #e8ce98;
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.sectionIcon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: #d9bd7b;
+  background: rgba(201, 169, 107, 0.12);
+}
+
+.planSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.summaryBlock {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(24, 36, 37, 0.58);
+}
+
+.summaryBlock > span {
+  color: #dce8df;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.summaryBlock p {
+  margin: 7px 0 0;
+  font-size: 0.78rem;
+}
+
+.summaryBlock ul {
+  display: grid;
+  gap: 5px;
+  margin: 7px 0 0;
+  padding-left: 16px;
+  color: #b9c8bf;
+  font-size: 0.78rem;
+}
+
+.summaryBlock li.done {
+  color: #82968e;
+  text-decoration: line-through;
+}
+
+.resourceList,
+.relationList {
+  display: grid;
+  gap: 7px;
+  margin-top: 13px;
+}
+
+.resourceRow,
+.relationRow {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(24, 36, 37, 0.58);
+}
+
+.resourceInfo {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.resourceInfo strong,
+.relationRow strong {
+  overflow-wrap: anywhere;
+  color: #e3eee4;
+  font-size: 0.82rem;
+}
+
+.resourceActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.resourceActions a {
+  padding: 6px 8px;
+  font-size: 0.75rem;
+}
+
+.unavailable {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: #f1c6a5;
+  background: rgba(191, 89, 84, 0.12);
+  font-size: 0.75rem;
+}
+
+.relationRow {
+  display: grid;
+  gap: 4px;
+}
+
+.relationRow > div {
+  display: grid;
+  gap: 4px;
+}
+
+.relationRow span {
+  color: #a7b8b1;
+  font-size: 0.75rem;
+}
+
+.relationRow p {
+  margin: 0;
+  color: #b9c8bf;
+  font-size: 0.76rem;
+}
+
+.emptyState {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  margin-top: 15px;
+  padding: 24px;
+  border: 1px dashed rgba(151, 166, 161, 0.3);
+  border-radius: 10px;
+  color: #a7b8b1;
+  text-align: center;
+}
+
+.emptyState strong {
+  color: #dce8df;
+}
+
+.emptyState p,
+.emptyCopy,
+.loadingCopy,
+.unavailableCopy {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.footerNote {
+  margin: 0;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 900px) {
+  .planSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .panel {
+    margin-top: 14px;
+    padding: 15px;
+    border-radius: 13px;
+  }
+
+  .heading,
+  .sessionMeta,
+  .resourceRow {
+    flex-direction: column;
+  }
+
+  .collapseButton,
+  .secondaryButton {
+    align-self: flex-start;
+  }
+
+  .continuityGrid,
+  .planSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .resourceActions {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel *,
+  .panel *::before,
+  .panel *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
