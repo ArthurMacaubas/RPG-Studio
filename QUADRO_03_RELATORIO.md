@@ -101,7 +101,7 @@ A tentativa de abrir a rota de investigação do jogador usando a sessão OWNER 
 
 ## 8. Publicação
 
-O commit funcional foi publicado em [`11071f3`](https://github.com/ArthurMacaubas/RPG-Studio/commit/11071f36e92000e7bf625b97db14914c2960ead8) na branch `main`. O deployment Production correspondente foi confirmado como **Ready** no projeto Vercel existente e associado ao domínio [`rpg-studio-rho.vercel.app`](https://rpg-studio-rho.vercel.app). O commit documental vigente [`87898ab`](https://github.com/ArthurMacaubas/RPG-Studio/commit/87898ab1542fabda290c7f95330100caaab5dd5f) também recebeu deployment Production **Ready**.
+O commit funcional foi publicado em [`11071f3`](https://github.com/ArthurMacaubas/RPG-Studio/commit/11071f36e92000e7bf625b97db14914c2960ead8) na branch `main`. O deployment Production correspondente foi confirmado como **Ready** no projeto Vercel existente e associado ao domínio [`rpg-studio-rho.vercel.app`](https://rpg-studio-rho.vercel.app). A versão documental vigente também recebeu deployment Production **Ready**.
 
 Não foi criado projeto Vercel duplicado, domínio adicional, cobrança, configuração nova ou segredo novo. O checkout local terminou limpo e sincronizado com `origin/main` após o commit funcional.
 
