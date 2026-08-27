@@ -23,3 +23,5 @@ O botão **Recolher** foi acionado e o painel passou para o estado **Expandir**,
 O atalho **Focar no quadro** navegou para a superfície `/campaigns/:id/investigacao` com `fileId` efêmero. Após a hidratação, o quadro exibiu três nós visíveis e o status **Ficha focada no quadro**, com a mensagem de que o foco é transitório e não altera o canvas. Nenhum recurso foi mutado.
 
 Um `fileId` com espaço foi testado na URL do quadro; a página carregou o estado neutro, sem foco, erro sensível ou tentativa de leitura inválida. A tentativa de abrir a rota de investigação do jogador com a sessão OWNER foi redirecionada pelo guard existente para o quadro administrativo, sem importar o painel Q03 para a superfície de jogador.
+
+Após o commit documental `3cf3747`, a Vercel iniciou novo deployment Production em estado **Building**. O deployment funcional `11071f3` já estava Ready; aguardou-se apenas a conclusão do deployment documental. O deployment documental também terminou em **Ready** e manteve o domínio de produção existente.
