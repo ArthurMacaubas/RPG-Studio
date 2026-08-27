@@ -44,6 +44,12 @@ Foram preservadas as regras reais existentes e adicionada a regra de hipótese r
 
 As regras são calculadas somente para dados administrativos efetivamente disponíveis no editor. Ausência de uma coleção não gera alerta especulativo.
 
+### Correção QUADRO 02.1 — diagnóstico de evidência mista
+
+A revisão posterior identificou um falso positivo na regra `HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE`: a condição anterior emitia o alerta com qualquer evidência `CONTRADICTS`, inclusive quando a hipótese tinha apenas evidência contrária. Isso era incompatível com a mensagem e a decisão técnica da regra, que representam a coexistência de evidências favoráveis e contrárias.
+
+A função pura `computeInvestigativeDiagnostics` agora calcula, sem mutar a entrada, as coleções `supports` e `contradicts` para cada hipótese e emite o diagnóstico somente quando `supports.length > 0 && contradicts.length > 0`. O status `OPEN`, `SUPPORTED` ou `REFUTED` não funciona como bypass. Severidade, IDs estáveis, ordenação, explicação, ação de revisão e todas as demais regras foram preservados.
+
 ## 4. Matriz de acesso e isolamento
 
 | Superfície | Resultado |
@@ -61,9 +67,9 @@ Os arquivos principais são `InvestigationBoardEditor.tsx`, `InvestigationFilter
 
 ## 6. Validação automatizada
 
-A suíte focada do incremento passou com 3 arquivos e 19 testes. A suíte completa passou com **44 arquivos e 271 testes**. Também passaram TypeScript estrito, Prisma generate, Prisma format check, Prisma validate, lint e build de produção. O diff passou `git diff --check`.
+A validação anterior do Quadro 02 registrava a suíte focada com 3 arquivos e 19 testes e a suíte completa com **44 arquivos e 271 testes**. Para o QUADRO 02.1, a suíte focada de `src/services/investigativeDiagnostics.test.ts` passou com **1 arquivo e 8 testes**, e a suíte completa passou novamente com **44 arquivos e 271 testes**. Também passaram TypeScript estrito, Prisma generate, Prisma format check, Prisma validate, lint e build de produção. O diff passou `git diff --check`.
 
-A revisão de segurança não encontrou URL PostgreSQL, credencial, token, chave privada ou arquivo de ambiente no diff. A migration e as operações persistentes não foram alteradas, pois este marco é deliberadamente local e não persistente.
+A revisão de segurança não encontrou URL PostgreSQL, credencial, token, chave privada ou arquivo de ambiente no diff. Não houve migration, script PostgreSQL, alteração de schema, persistência, importação/exportação, rota, API, UI, publicação ou execução de browser, pois esta correção é deliberadamente pura e não persistente.
 
 ## 7. Validação manual
 
@@ -73,6 +79,6 @@ A validação foi registrada de modo anonimizado, sem nomes reais de campanha, I
 
 ## 8. Riscos residuais e não-escopo
 
-Filtros e diagnósticos são locais e não sincronizam entre dispositivos. Fichas fora do escopo atualmente carregado não são inferidas. Relações incompletas continuam exigindo decisão manual do Mestre. Não foram iniciados auto-layout, novas vistas, projeção de jogador, IA, rate limiting, storage ou a frente seguinte.
+Filtros e diagnósticos são locais e não sincronizam entre dispositivos. Fichas fora do escopo atualmente carregado não são inferidas. Relações incompletas continuam exigindo decisão manual do Mestre. A correção 02.1 não altera essas fronteiras e não cria novas regras, severidades, superfícies administrativas ou projeções de jogador.
 
-O próximo candidato, somente após aprovação deste marco, é a recuperação operacional de sessões e integrações de contexto com o Quadro.
+O QUADRO 02.1 está aprovado tecnicamente, mas o próximo candidato continua bloqueado até o aceite formal solicitado no prompt: a recuperação operacional de sessões e integrações de contexto com o Quadro.

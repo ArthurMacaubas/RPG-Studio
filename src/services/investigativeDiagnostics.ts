@@ -140,7 +140,7 @@ export function computeInvestigativeDiagnostics(input: InvestigativeDiagnosticsI
       ));
     }
 
-    if (contradicts.length > 0) {
+    if (supports.length > 0 && contradicts.length > 0) {
       issues.push(diagnostic(
         'HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE',
         'warning',

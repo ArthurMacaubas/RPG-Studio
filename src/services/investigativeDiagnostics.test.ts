@@ -50,28 +50,56 @@ describe('investigativeDiagnostics Q06', () => {
     expect(issueCodes(withContradiction)).not.toContain('REFUTED_HYPOTHESIS_WITHOUT_CONTRADICTION');
   });
 
-  it('detecta hipótese sustentada sem SUPPORTS e contradição entre evidências', () => {
-    const input = base({
-      hypotheses: [{
-        id: 'h-supported',
-        title: 'Hipótese sustentada',
-        status: 'SUPPORTED',
-        evidence: [evidence('e-1', 'f-1', 'CONTRADICTS'), evidence('e-2', 'f-2', 'CONTEXT')]
-      }],
-      files: [file('f-1'), file('f-2')]
+  it('emite evidência mista somente quando a mesma hipótese tem SUPPORTS e CONTRADICTS', () => {
+    const onlyContradicts = base({
+      hypotheses: [{ id: 'h-only-contradicts', title: 'Somente contrária', status: 'OPEN', evidence: [evidence('e-1', 'f-1', 'CONTRADICTS')] }]
     });
-    expect(issueCodes(input)).toEqual(['HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE', 'SUPPORTED_HYPOTHESIS_WITHOUT_SUPPORT']);
+    expect(issueCodes(onlyContradicts)).not.toContain('HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE');
 
-    const contradictory = base({
-      hypotheses: [{
-        id: 'h-conflict',
-        title: 'Hipótese conflitante',
-        status: 'OPEN',
-        evidence: [evidence('e-2', 'f-2', 'CONTRADICTS')]
-      }],
-      files: [file('f-2')]
+    const onlySupports = base({
+      hypotheses: [{ id: 'h-only-supports', title: 'Somente favorável', status: 'OPEN', evidence: [evidence('e-2', 'f-2', 'SUPPORTS')] }]
     });
-    expect(issueCodes(contradictory)).toContain('HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE');
+    expect(issueCodes(onlySupports)).not.toContain('HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE');
+
+    const contradictsAndContext = base({
+      hypotheses: [{ id: 'h-contradicts-context', title: 'Contrária e contexto', status: 'OPEN', evidence: [evidence('e-3', 'f-3', 'CONTRADICTS'), evidence('e-4', 'f-4', 'CONTEXT')] }]
+    });
+    expect(issueCodes(contradictsAndContext)).not.toContain('HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE');
+
+    const supportsAndContext = base({
+      hypotheses: [{ id: 'h-supports-context', title: 'Favorável e contexto', status: 'OPEN', evidence: [evidence('e-5', 'f-5', 'SUPPORTS'), evidence('e-6', 'f-6', 'CONTEXT')] }]
+    });
+    expect(issueCodes(supportsAndContext)).not.toContain('HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE');
+
+    const mixed = base({
+      hypotheses: [{ id: 'h-mixed', title: 'Hipótese mista', status: 'OPEN', evidence: [evidence('e-7', 'f-7', 'CONTRADICTS'), evidence('e-8', 'f-8', 'SUPPORTS')] }]
+    });
+    const mixedIssues = computeInvestigativeDiagnostics(mixed);
+    const mixedDiagnostics = mixedIssues.filter((issue) => issue.code === 'HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE');
+    expect(mixedDiagnostics).toHaveLength(1);
+    expect(mixedDiagnostics[0]).toMatchObject({
+      severity: 'warning',
+      explanation: expect.any(String),
+      action: { label: 'Revisar hipóteses', href: '/campaigns/campaign-1/investigacao' }
+    });
+
+    for (const status of ['OPEN', 'SUPPORTED', 'REFUTED'] as const) {
+      const mixedForStatus = base({
+        hypotheses: [{ id: `h-mixed-${status.toLowerCase()}`, title: `Mista ${status}`, status, evidence: [evidence(`e-${status}-support`, `f-${status}-support`, 'SUPPORTS'), evidence(`e-${status}-contradict`, `f-${status}-contradict`, 'CONTRADICTS')] }]
+      });
+      expect(issueCodes(mixedForStatus).filter((code) => code === 'HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE')).toHaveLength(1);
+    }
+
+    const refutedWithContradiction = base({
+      hypotheses: [{ id: 'h-refuted-contradiction', title: 'Refutada', status: 'REFUTED', evidence: [evidence('e-9', 'f-9', 'CONTRADICTS')] }]
+    });
+    expect(issueCodes(refutedWithContradiction)).not.toContain('HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE');
+    expect(issueCodes(refutedWithContradiction)).not.toContain('REFUTED_HYPOTHESIS_WITHOUT_CONTRADICTION');
+
+    const supportedWithoutSupport = base({
+      hypotheses: [{ id: 'h-supported-without-support', title: 'Sustentada sem apoio', status: 'SUPPORTED', evidence: [evidence('e-10', 'f-10', 'CONTRADICTS')] }]
+    });
+    expect(issueCodes(supportedWithoutSupport)).toEqual(['SUPPORTED_HYPOTHESIS_WITHOUT_SUPPORT']);
   });
 
   it('detecta evidências ligadas a arquivo arquivado ou na lixeira', () => {
