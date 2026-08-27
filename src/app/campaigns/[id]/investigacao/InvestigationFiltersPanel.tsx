@@ -1,7 +1,8 @@
 'use client';
 
-import { RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { RotateCcw, Search, SlidersHorizontal } from 'lucide-react';
 import type { CampaignFile, EvidenceStance, FileType, HypothesisStatus, RelationshipImportance, RelationshipVisibility, Tag } from '@/types';
+import type { BoardInvestigationFilters, BoardPresenceFilter } from './investigationBoardFilterLogic';
 import styles from './investigationFilters.module.css';
 
 export type InvestigationFileScope = 'active' | 'archived' | 'trash';
@@ -31,6 +32,13 @@ export const DEFAULT_INVESTIGATION_FILTERS: InvestigationFilterState = {
   hypothesisStatus: 'ALL',
   evidenceStance: 'ALL',
   layers: { files: true, officialRelationships: true, visualEdges: true, evidence: true, hypotheses: true, annotations: true }
+};
+
+export const DEFAULT_BOARD_INVESTIGATION_FILTERS: BoardInvestigationFilters = {
+  presence: 'ALL',
+  usedAsEvidence: false,
+  inOpenHypothesis: false,
+  importantRelationship: false
 };
 
 const FILE_TYPES: Array<{ value: FileType; label: string }> = [
@@ -77,18 +85,39 @@ function updateFilter<K extends keyof InvestigationFilterState>(filters: Investi
   return { ...filters, [key]: value };
 }
 
+function updateInvestigationFilter<K extends keyof BoardInvestigationFilters>(filters: BoardInvestigationFilters, key: K, value: BoardInvestigationFilters[K]) {
+  return { ...filters, [key]: value };
+}
+
 type InvestigationFiltersPanelProps = {
   filters: InvestigationFilterState;
+  investigationFilters: BoardInvestigationFilters;
   files: CampaignFile[];
+  visibleFiles: CampaignFile[];
+  boardFileIds: ReadonlySet<string>;
   tags: Tag[];
   visibleNodeCount: number;
   officialRelationshipCount: number;
   filteredOfficialRelationshipCount: number;
   onChange: (filters: InvestigationFilterState) => void;
+  onInvestigationChange: (filters: BoardInvestigationFilters) => void;
   onReset: () => void;
+  onFocusFile: (fileId: string) => void;
+  onAddToBoard: (fileId: string) => Promise<void>;
+  onOpenFile: (fileId: string) => void;
 };
 
-export default function InvestigationFiltersPanel({ filters, files, tags, visibleNodeCount, officialRelationshipCount, filteredOfficialRelationshipCount, onChange, onReset }: InvestigationFiltersPanelProps) {
+function hasInvestigationFilter(filters: BoardInvestigationFilters) {
+  return filters.presence !== 'ALL' || filters.usedAsEvidence || filters.inOpenHypothesis || filters.importantRelationship;
+}
+
+function presenceLabel(value: BoardPresenceFilter) {
+  if (value === 'ON_BOARD') return 'No canvas';
+  if (value === 'OFF_BOARD') return 'Fora do canvas';
+  return 'Todas as fichas';
+}
+
+export default function InvestigationFiltersPanel({ filters, investigationFilters, files, visibleFiles, boardFileIds, tags, visibleNodeCount, officialRelationshipCount, filteredOfficialRelationshipCount, onChange, onInvestigationChange, onReset, onFocusFile, onAddToBoard, onOpenFile }: InvestigationFiltersPanelProps) {
   function toggleTag(tagId: string) {
     const nextTagIds = filters.tagIds.includes(tagId) ? filters.tagIds.filter((id) => id !== tagId) : [...filters.tagIds, tagId];
     onChange(updateFilter(filters, 'tagIds', nextTagIds));
@@ -98,7 +127,22 @@ export default function InvestigationFiltersPanel({ filters, files, tags, visibl
     onChange(updateFilter(filters, 'layers', { ...filters.layers, [key]: !filters.layers[key] }));
   }
 
-  const activeFilterCount = [filters.search, filters.fileType !== 'ALL' ? filters.fileType : '', filters.tagIds.length ? 'tags' : '', filters.scope !== 'active' ? filters.scope : '', filters.favoritesOnly ? 'favorites' : '', filters.relationshipImportance !== 'ALL' ? filters.relationshipImportance : '', filters.relationshipVisibility !== 'ALL' ? filters.relationshipVisibility : '', filters.hypothesisStatus !== 'ALL' ? filters.hypothesisStatus : '', filters.evidenceStance !== 'ALL' ? filters.evidenceStance : ''].filter(Boolean).length;
+  const activeFilterCount = [
+    filters.search,
+    filters.fileType !== 'ALL' ? filters.fileType : '',
+    filters.tagIds.length ? 'tags' : '',
+    filters.scope !== 'active' ? filters.scope : '',
+    filters.favoritesOnly ? 'favorites' : '',
+    filters.relationshipImportance !== 'ALL' ? filters.relationshipImportance : '',
+    filters.relationshipVisibility !== 'ALL' ? filters.relationshipVisibility : '',
+    filters.hypothesisStatus !== 'ALL' ? filters.hypothesisStatus : '',
+    filters.evidenceStance !== 'ALL' ? filters.evidenceStance : '',
+    investigationFilters.presence !== 'ALL' ? investigationFilters.presence : '',
+    investigationFilters.usedAsEvidence ? 'evidence' : '',
+    investigationFilters.inOpenHypothesis ? 'open-hypothesis' : '',
+    investigationFilters.importantRelationship ? 'important-relationship' : ''
+  ].filter(Boolean).length;
+  const showResults = activeFilterCount > 0;
 
   return (
     <aside className={styles.panel} aria-label="Filtros e camadas do quadro">
@@ -106,9 +150,10 @@ export default function InvestigationFiltersPanel({ filters, files, tags, visibl
         <div><p className={styles.eyebrow}><SlidersHorizontal size={13} /> Navegação do quadro</p><h2>Filtros e camadas</h2></div>
         <button type="button" className={styles.resetButton} onClick={onReset} aria-label="Limpar filtros" title="Limpar filtros"><RotateCcw size={14} /></button>
       </div>
-      <p className={styles.summary}>{activeFilterCount ? `${activeFilterCount} filtro${activeFilterCount === 1 ? '' : 's'} ativo${activeFilterCount === 1 ? '' : 's'}` : 'Nenhum filtro ativo'} · {visibleNodeCount} nó{visibleNodeCount === 1 ? '' : 's'} no canvas</p>
+      <p className={styles.summary} aria-live="polite">{activeFilterCount ? `${activeFilterCount} filtro${activeFilterCount === 1 ? '' : 's'} ativo${activeFilterCount === 1 ? '' : 's'}` : 'Nenhum filtro ativo'} · {visibleNodeCount} nó{visibleNodeCount === 1 ? '' : 's'} visível{visibleNodeCount === 1 ? '' : 'is'} · {visibleFiles.length} resultado{visibleFiles.length === 1 ? '' : 's'} local{visibleFiles.length === 1 ? '' : 'is'}</p>
 
-      <label className={styles.searchField}>Buscar fichas<input value={filters.search} onChange={(event) => onChange(updateFilter(filters, 'search', event.target.value))} placeholder="Nome, identificação ou conteúdo..." /></label>
+      <label className={styles.searchField}><Search size={14} /><span className={styles.srOnly}>Buscar no quadro</span><input value={filters.search} onChange={(event) => onChange(updateFilter(filters, 'search', event.target.value))} placeholder="Nome, tipo, tags ou hipótese..." /></label>
+
       <div className={styles.fieldsGrid}>
         <label>Tipo<select value={filters.fileType} onChange={(event) => onChange(updateFilter(filters, 'fileType', event.target.value as FileType | 'ALL'))}><option value="ALL">Todos os tipos</option>{FILE_TYPES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
         <label>Escopo<select value={filters.scope} onChange={(event) => onChange(updateFilter(filters, 'scope', event.target.value as InvestigationFileScope))}><option value="active">Ativas</option><option value="archived">Arquivadas</option><option value="trash">Lixeira</option></select></label>
@@ -116,6 +161,14 @@ export default function InvestigationFiltersPanel({ filters, files, tags, visibl
       <label className={styles.checkbox}><input type="checkbox" checked={filters.favoritesOnly} onChange={(event) => onChange(updateFilter(filters, 'favoritesOnly', event.target.checked))} /> Somente favoritas</label>
 
       <fieldset className={styles.fieldset}><legend>Tags</legend>{tags.length === 0 ? <p className={styles.muted}>Nenhuma tag no escopo carregado.</p> : <div className={styles.chips}>{tags.map((tag) => <label key={tag.id} className={`${styles.chip} ${filters.tagIds.includes(tag.id) ? styles.chipActive : ''}`}><input type="checkbox" checked={filters.tagIds.includes(tag.id)} onChange={() => toggleTag(tag.id)} /><span style={{ borderColor: tag.color }}>{tag.name}</span></label>)}</div>}</fieldset>
+
+      <fieldset className={styles.fieldset}><legend>Investigação</legend><div className={styles.fieldsGrid}>
+        <label>Presença<select aria-label="Filtrar por presença no canvas" value={investigationFilters.presence} onChange={(event) => onInvestigationChange(updateInvestigationFilter(investigationFilters, 'presence', event.target.value as BoardPresenceFilter))}><option value="ALL">Todas as fichas</option><option value="ON_BOARD">No canvas</option><option value="OFF_BOARD">Fora do canvas</option></select></label>
+      </div>
+        <label className={styles.checkbox}><input type="checkbox" checked={investigationFilters.usedAsEvidence} onChange={(event) => onInvestigationChange(updateInvestigationFilter(investigationFilters, 'usedAsEvidence', event.target.checked))} /> Usada como evidência</label>
+        <label className={styles.checkbox}><input type="checkbox" checked={investigationFilters.inOpenHypothesis} onChange={(event) => onInvestigationChange(updateInvestigationFilter(investigationFilters, 'inOpenHypothesis', event.target.checked))} /> Ligada a hipótese aberta</label>
+        <label className={styles.checkbox}><input type="checkbox" checked={investigationFilters.importantRelationship} onChange={(event) => onInvestigationChange(updateInvestigationFilter(investigationFilters, 'importantRelationship', event.target.checked))} /> Em relação oficial importante</label>
+      </fieldset>
 
       <details className={styles.details} open>
         <summary>Relações oficiais</summary>
@@ -136,8 +189,20 @@ export default function InvestigationFiltersPanel({ filters, files, tags, visibl
       </details>
 
       <fieldset className={styles.fieldset}><legend>Camadas visuais</legend><div className={styles.layers}>{LAYER_OPTIONS.map((layer) => <label key={layer.key} className={styles.layer}><input type="checkbox" checked={filters.layers[layer.key]} onChange={() => toggleLayer(layer.key)} /><span className={`${styles.swatch} ${styles[layer.swatch]}`} /><span><strong>{layer.label}</strong><small>{layer.note}</small></span></label>)}</div></fieldset>
+
+      {showResults && (
+        <section className={styles.results} aria-labelledby="board-search-results-title">
+          <div className={styles.resultsHeading}><div><h3 id="board-search-results-title">Resultados locais</h3><span>{visibleFiles.length} ficha{visibleFiles.length === 1 ? '' : 's'} no escopo carregado</span></div><span className={styles.resultsScope}>{presenceLabel(investigationFilters.presence)}</span></div>
+          {visibleFiles.length === 0 ? <div className={styles.emptyState}><strong>Nenhuma ficha corresponde.</strong><span>Os filtros atuais são locais e reversíveis.</span><button type="button" className={styles.emptyAction} onClick={onReset}>Remover filtros</button></div> : <ul className={styles.resultList}>{visibleFiles.slice(0, 18).map((file) => {
+            const onBoard = boardFileIds.has(file.id);
+            return <li key={file.id} className={styles.resultItem}><div><strong>{file.name}</strong><small>{FILE_TYPES.find((item) => item.value === file.type)?.label ?? file.type} · {onBoard ? 'No canvas' : 'Fora do canvas'}</small></div><div className={styles.resultActions}>{onBoard ? <button type="button" onClick={() => onFocusFile(file.id)}>Focar</button> : <><button type="button" onClick={() => onOpenFile(file.id)}>Abrir ficha</button><button type="button" onClick={() => void onAddToBoard(file.id)}>Adicionar</button></>}</div></li>;
+          })}</ul>}
+          {visibleFiles.length > 18 && <p className={styles.layerCount}>Mostrando as primeiras 18 fichas. Refine a busca para reduzir a lista.</p>}
+        </section>
+      )}
+
       {files.length > 0 && visibleNodeCount === 0 && <p className={styles.emptyState}>Há {files.length} ficha{files.length === 1 ? '' : 's'} no escopo selecionado, mas nenhuma está representada no canvas atual.</p>}
-      <p className={styles.caption}>Filtros são locais e reversíveis; nenhum estado é persistido.</p>
+      <p className={styles.caption}>Filtros, resultados e camadas são locais e reversíveis; nenhuma alteração é persistida por esta navegação.</p>
     </aside>
   );
 }

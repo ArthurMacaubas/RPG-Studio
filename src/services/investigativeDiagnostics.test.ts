@@ -42,6 +42,14 @@ describe('investigativeDiagnostics Q06', () => {
     });
   });
 
+  it('detecta hipótese refutada sem CONTRADICTS e preserva a ausência de alerta quando há evidência contrária', () => {
+    const withoutContradiction = base({ hypotheses: [{ id: 'h-refuted', title: 'Hipótese refutada', status: 'REFUTED', evidence: [evidence('e-context', 'f-context', 'CONTEXT')] }] });
+    expect(issueCodes(withoutContradiction)).toContain('REFUTED_HYPOTHESIS_WITHOUT_CONTRADICTION');
+
+    const withContradiction = base({ hypotheses: [{ id: 'h-refuted-ok', title: 'Hipótese refutada', status: 'REFUTED', evidence: [evidence('e-contradiction', 'f-contradiction', 'CONTRADICTS')] }] });
+    expect(issueCodes(withContradiction)).not.toContain('REFUTED_HYPOTHESIS_WITHOUT_CONTRADICTION');
+  });
+
   it('detecta hipótese sustentada sem SUPPORTS e contradição entre evidências', () => {
     const input = base({
       hypotheses: [{

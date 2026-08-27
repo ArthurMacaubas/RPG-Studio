@@ -27,6 +27,7 @@ type HypothesesPanelProps = {
   onFocusFile: (fileId: string) => void;
   onAddToBoard: (fileId: string) => Promise<void>;
   onHighlightFiles: (fileIds: string[]) => void;
+  focusHypothesisId?: string | null;
   statusFilter?: 'ALL' | HypothesisStatus;
   evidenceStanceFilter?: 'ALL' | EvidenceStance;
   onStatusFilterChange?: (value: 'ALL' | HypothesisStatus) => void;
@@ -41,7 +42,7 @@ function countByStance(hypothesis: InvestigationHypothesis, stance: EvidenceStan
   return hypothesis.evidence.filter((evidence) => evidence.stance === stance).length;
 }
 
-export default function HypothesesPanel({ campaignId, boardFileIds, onFocusFile, onAddToBoard, onHighlightFiles, statusFilter: externalStatusFilter, evidenceStanceFilter: externalEvidenceStanceFilter, onStatusFilterChange, onEvidenceStanceFilterChange }: HypothesesPanelProps) {
+export default function HypothesesPanel({ campaignId, boardFileIds, onFocusFile, onAddToBoard, onHighlightFiles, focusHypothesisId, statusFilter: externalStatusFilter, evidenceStanceFilter: externalEvidenceStanceFilter, onStatusFilterChange, onEvidenceStanceFilterChange }: HypothesesPanelProps) {
   const [hypotheses, setHypotheses] = useState<InvestigationHypothesis[]>([]);
   const [files, setFiles] = useState<CampaignFile[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -87,6 +88,11 @@ export default function HypothesesPanel({ campaignId, boardFileIds, onFocusFile,
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!focusHypothesisId || !hypotheses.some((hypothesis) => hypothesis.id === focusHypothesisId)) return;
+    setSelectedId(focusHypothesisId);
+  }, [focusHypothesisId, hypotheses]);
 
   useEffect(() => {
     setEditTitle(selected?.title ?? '');

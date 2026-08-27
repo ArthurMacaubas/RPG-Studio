@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { BoardEdgeItem, BoardNodeItem, CampaignFile, RelationshipImportance, RelationshipVisibility } from '@/types';
-import { filterBoardEdges, filterBoardNodes, filterOfficialRelationships } from './investigationBoardFilterLogic';
+import { filterBoardEdges, filterBoardNodes, filterOfficialRelationships, filterInvestigationFiles, normalizeSearch } from './investigationBoardFilterLogic';
 
 function makeFile(id: string, overrides: Partial<CampaignFile> = {}): CampaignFile {
   return {
@@ -49,6 +49,29 @@ describe('investigationBoardFilterLogic', () => {
     expect(filterBoardNodes(nodes, { ...baseFilters, fileType: 'CLUE', tagIds: ['tag-clue'], favoritesOnly: true, search: 'marca de sal' })).toHaveLength(1);
     expect(filterBoardNodes(nodes, { ...baseFilters, search: 'evidencia-lanterna' }).map((node) => node.fileId)).toEqual(['clue-1']);
     expect(filterBoardNodes(nodes, { ...baseFilters, search: 'mapa antigo' }).map((node) => node.fileId)).toEqual(['clue-2']);
+  });
+
+  it('normaliza acentos e busca também por tag e título de hipótese sem novas consultas', () => {
+    const tagged = makeFile('tagged', {
+      name: 'Pista do Coração',
+      tags: [{ tag: { id: 'tag-ritual', campaignId: 'campaign-test', name: 'Ritual antigo', color: '#c8a66a', icon: null, description: 'marcas do ritual' } }]
+    });
+    const hypotheses = [{ id: 'h-1', status: 'OPEN' as const, title: 'A chave está no coração', summary: 'A hipótese do ritual.', evidence: [{ fileId: tagged.id }] as never }];
+    expect(normalizeSearch('CORAÇÃO')).toBe('coracao');
+    expect(filterInvestigationFiles([tagged], { ...baseFilters, search: 'coracao' }, { presence: 'ALL', usedAsEvidence: false, inOpenHypothesis: false, importantRelationship: false }, { hypotheses })).toHaveLength(1);
+    expect(filterInvestigationFiles([tagged], { ...baseFilters, search: 'ritual antigo' }, { presence: 'ALL', usedAsEvidence: false, inOpenHypothesis: false, importantRelationship: false }, { hypotheses })).toHaveLength(1);
+    expect(filterInvestigationFiles([tagged], { ...baseFilters, search: 'chave esta' }, { presence: 'ALL', usedAsEvidence: false, inOpenHypothesis: false, importantRelationship: false }, { hypotheses })).toHaveLength(1);
+  });
+
+  it('combina presença, evidência, hipótese aberta e relação importante localmente', () => {
+    const onBoard = makeFile('on-board');
+    const offBoard = makeFile('off-board');
+    const hypotheses = [{ id: 'h-open', status: 'OPEN' as const, title: 'Hipótese', summary: null, evidence: [{ fileId: offBoard.id }] as never }];
+    const filters = { ...baseFilters };
+    const investigation = { presence: 'OFF_BOARD' as const, usedAsEvidence: true, inOpenHypothesis: true, importantRelationship: true };
+    const result = filterInvestigationFiles([onBoard, offBoard], filters, investigation, { boardFileIds: new Set([onBoard.id]), hypotheses, importantRelationshipFileIds: new Set([offBoard.id]) });
+    expect(result.map((file) => file.id)).toEqual([offBoard.id]);
+    expect(onBoard.id).not.toBe(offBoard.id);
   });
 
   it('alterna entre ativo, arquivado e lixeira sem alterar os dados', () => {

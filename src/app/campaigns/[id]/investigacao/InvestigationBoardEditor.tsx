@@ -3,22 +3,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeftRight, ExternalLink, Plus, Link2, ZoomIn, ZoomOut, Maximize, Lightbulb, SlidersHorizontal, Layers3, Bookmark, Wand2 } from 'lucide-react';
+import { ArrowLeftRight, ExternalLink, Plus, Link2, ZoomIn, ZoomOut, Maximize, Lightbulb, SlidersHorizontal, Layers3, Bookmark, Wand2, Search, Wrench } from 'lucide-react';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { FileTypeIcon } from '@/components/fileTypeIcon';
 import { AddToBoardModal } from '@/components/AddToBoardModal';
 import { useToast } from '@/components/ui/ToastProvider';
 import { boardAnnotationsApi, boardApi, boardViewsApi, filesApi, hypothesesApi, relationshipsApi } from '@/lib/api';
-import type { BoardEdgeItem, BoardNodeItem, CampaignFile, InvestigationBoardGroup, InvestigationBoardPinItem, InvestigationBoardViewItem, InvestigationBoardViewKind, InvestigationBoardViewSnapshot, RelationshipImportance, RelationshipVisibility } from '@/types';
+import type { BoardEdgeItem, BoardNodeItem, CampaignFile, CompilerIssue, InvestigationBoardGroup, InvestigationBoardPinItem, InvestigationBoardViewItem, InvestigationBoardViewKind, InvestigationBoardViewSnapshot, RelationshipImportance, RelationshipVisibility } from '@/types';
 import HypothesesPanel from './HypothesesPanel';
 import InvestigationFiltersPanel, { DEFAULT_INVESTIGATION_FILTERS, type InvestigationFilterState } from './InvestigationFiltersPanel';
 import BoardAnnotationsPanel from './BoardAnnotationsPanel';
 import BoardViewsPanel from './BoardViewsPanel';
 import BoardLayoutPathsPanel from './BoardLayoutPathsPanel';
-import { filterBoardEdges, filterBoardNodes, filterOfficialRelationships } from './investigationBoardFilterLogic';
+import { filterBoardEdges, filterBoardNodes, filterOfficialRelationships, filterInvestigationFiles, type BoardInvestigationFilters } from './investigationBoardFilterLogic';
 import { computeAutoLayout, type AutoLayoutResult, type BoardNodePosition } from '@/services/investigationBoardLayout';
 import { findInvestigationPaths, type InvestigationPathsResult, type PathMode } from '@/services/investigationBoardPaths';
 import { FILE_TYPE_LABELS } from '@/types';
+import { computeInvestigativeDiagnostics } from '@/services/investigativeDiagnostics';
+import InvestigationDiagnosticsPanel from './InvestigationDiagnosticsPanel';
 import styles from './page.module.css';
 
 const EDGE_COLORS = ['#de7d78', '#e5ac68', '#88c799', '#c8a66a', '#86aaa2', '#edf3ee'];
@@ -46,8 +48,12 @@ export default function InvestigationBoardPage() {
   const [showHypotheses, setShowHypotheses] = useState(true);
   const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState<InvestigationFilterState>(DEFAULT_INVESTIGATION_FILTERS);
+  const [investigationFilters, setInvestigationFilters] = useState<BoardInvestigationFilters>({ presence: 'ALL', usedAsEvidence: false, inOpenHypothesis: false, importantRelationship: false });
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [focusHypothesisId, setFocusHypothesisId] = useState<string | null>(null);
   const [allFiles, setAllFiles] = useState<CampaignFile[]>([]);
   const [officialRelationships, setOfficialRelationships] = useState<Awaited<ReturnType<typeof relationshipsApi.graph>>['edges']>([]);
+  const [officialRelationshipFiles, setOfficialRelationshipFiles] = useState<Awaited<ReturnType<typeof relationshipsApi.graph>>['nodes']>([]);
   const [selectedOfficialRelationshipId, setSelectedOfficialRelationshipId] = useState<string | null>(null);
   const [highlightedFileIds, setHighlightedFileIds] = useState<Set<string>>(new Set());
   const [pins, setPins] = useState<InvestigationBoardPinItem[]>([]);
@@ -107,6 +113,7 @@ export default function InvestigationBoardPage() {
     ]).then(([nextFiles, graph]) => {
       if (cancelled) return;
       setAllFiles(nextFiles);
+      setOfficialRelationshipFiles(graph.nodes);
       setOfficialRelationships(graph.edges);
     }).catch(() => {
       if (!cancelled) toast({ tone: 'error', title: 'Camadas indisponíveis', message: 'Não foi possível carregar todas as camadas do quadro.' });
@@ -280,11 +287,32 @@ export default function InvestigationBoardPage() {
   }, [campaignId, focusFile, nodes, pan.x, pan.y, toast, zoom]);
 
   const boardFileIds = useMemo(() => new Set(nodes.map((node) => node.fileId)), [nodes]);
-  const filteredNodes = useMemo(() => filterBoardNodes(nodes, filters), [filters, nodes]);
+  const importantRelationshipFileIds = useMemo(() => new Set(officialRelationships.filter((relationship) => relationship.importance === 'CRITICAL' || relationship.importance === 'IMPORTANT').flatMap((relationship) => [relationship.sourceId, relationship.targetId])), [officialRelationships]);
+  const explorationContext = useMemo(() => ({ boardFileIds, hypotheses, importantRelationshipFileIds }), [boardFileIds, hypotheses, importantRelationshipFileIds]);
+  const visibleFiles = useMemo(() => filterInvestigationFiles(allFiles, filters, investigationFilters, explorationContext), [allFiles, explorationContext, filters, investigationFilters]);
+  const filteredNodes = useMemo(() => filterBoardNodes(nodes, filters, investigationFilters, explorationContext), [filters, investigationFilters, nodes, explorationContext]);
   const visibleNodeFileIds = useMemo(() => filters.layers.files ? new Set(filteredNodes.map((node) => node.fileId)) : new Set<string>(), [filters.layers.files, filteredNodes]);
   const filteredEdges = useMemo(() => filterBoardEdges(edges, nodes, visibleNodeFileIds, filters.layers.visualEdges), [edges, filters.layers.visualEdges, nodes, visibleNodeFileIds]);
   const filteredOfficialRelationships = useMemo(() => filterOfficialRelationships(officialRelationships, visibleNodeFileIds, filters), [filters, officialRelationships, visibleNodeFileIds]);
+  const diagnosticIssues = useMemo(() => computeInvestigativeDiagnostics({
+    campaignId,
+    files: allFiles,
+    hypotheses,
+    importantRelationships: officialRelationships.filter((relationship) => relationship.importance === 'CRITICAL' || relationship.importance === 'IMPORTANT').map((relationship) => ({
+      id: relationship.id,
+      fromId: relationship.sourceId,
+      toId: relationship.targetId,
+      importance: relationship.importance,
+      from: officialRelationshipFiles.find((file) => file.id === relationship.sourceId) ?? { id: relationship.sourceId, name: 'Origem' },
+      to: officialRelationshipFiles.find((file) => file.id === relationship.targetId) ?? { id: relationship.targetId, name: 'Destino' }
+    })),
+    activeBoardFileIds: boardFileIds,
+    boardPins: pins,
+    boardGroups: groups,
+    boardViews: views
+  }), [allFiles, boardFileIds, campaignId, groups, hypotheses, officialRelationshipFiles, officialRelationships, pins, views]);
   const selectedOfficialRelationship = useMemo(() => filteredOfficialRelationships.find((relationship) => relationship.id === selectedOfficialRelationshipId) ?? null, [filteredOfficialRelationships, selectedOfficialRelationshipId]);
+  const hasFocus = highlightedFileIds.size > 0 || Boolean(focusHypothesisId) || Boolean(selectedOfficialRelationshipId);
   const availableTags = useMemo(() => {
     const byId = new Map<string, NonNullable<CampaignFile['tags']>[number]['tag']>();
     for (const file of allFiles) for (const entry of file.tags ?? []) byId.set(entry.tag.id, entry.tag);
@@ -297,11 +325,73 @@ export default function InvestigationBoardPage() {
   }, []);
   const resetFilters = useCallback(() => {
     setFilters(DEFAULT_INVESTIGATION_FILTERS);
+    setInvestigationFilters({ presence: 'ALL', usedAsEvidence: false, inOpenHypothesis: false, importantRelationship: false });
     setShowHypotheses(true);
   }, []);
   const highlightHypothesisFiles = useCallback((fileIds: string[]) => {
     setHighlightedFileIds(filters.layers.evidence ? new Set(fileIds.filter((fileId) => visibleNodeFileIds.has(fileId))) : new Set());
   }, [filters.layers.evidence, visibleNodeFileIds]);
+
+  const clearFocus = useCallback(() => {
+    setHighlightedFileIds(new Set());
+    setFocusHypothesisId(null);
+    setSelectedOfficialRelationshipId(null);
+  }, []);
+
+  const toggleDiagnostics = useCallback(() => {
+    setShowDiagnostics((current) => {
+      const next = !current;
+      if (next) {
+        setShowFilters(false);
+        setShowAnnotations(false);
+        setShowViews(false);
+        setShowLayoutPaths(false);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleDiagnosticAction = useCallback((issue: CompilerIssue) => {
+    const entityIds = issue.entityIds ?? [];
+    const hypothesisId = entityIds.find((id) => hypotheses.some((hypothesis) => hypothesis.id === id));
+    if (hypothesisId || issue.code?.startsWith('HYPOTHESIS_') || issue.code === 'REFUTED_HYPOTHESIS_WITHOUT_CONTRADICTION') {
+      setFocusHypothesisId(hypothesisId ?? entityIds[0] ?? null);
+      setShowHypotheses(true);
+      setFilters((current) => ({ ...current, layers: { ...current.layers, hypotheses: true, evidence: true } }));
+      return;
+    }
+    const fileId = issue.code === 'EVIDENCE_FILE_UNAVAILABLE' ? entityIds[1] : issue.fileId ?? entityIds.find((id) => allFiles.some((file) => file.id === id));
+    if (fileId && (issue.code === 'EVIDENCE_FILE_UNAVAILABLE' || issue.code === 'CRITICAL_CLUE_WITHOUT_HYPOTHESIS')) {
+      setShowHypotheses(true);
+      focusFile(fileId);
+      return;
+    }
+    if (issue.code === 'BOARD_ANNOTATION_REFERENCE_INVALID') {
+      setShowViews(true);
+      setShowDiagnostics(false);
+      return;
+    }
+    if (issue.code === 'IMPORTANT_RELATIONSHIP_OUTSIDE_ACTIVE_BOARD') {
+      const relationship = officialRelationships.find((item) => item.id === entityIds[0]);
+      if (relationship) {
+        setShowDiagnostics(false);
+        setSelectedOfficialRelationshipId(null);
+        const present = [relationship.sourceId, relationship.targetId].filter((fileId) => boardFileIds.has(fileId));
+        if (present[0]) focusFile(present[0]);
+        toast({ tone: 'info', title: 'Relação importante revisada', message: 'Um endpoint foi focado quando disponível. Adicione manualmente o nó ausente para revisar a relação no canvas.' });
+      }
+      return;
+    }
+    if (issue.action?.href) router.push(issue.action.href as never);
+  }, [allFiles, boardFileIds, focusFile, hypotheses, officialRelationships, router, toast]);
+
+  useEffect(() => {
+    const clearWithEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') clearFocus();
+    };
+    window.addEventListener('keydown', clearWithEscape);
+    return () => window.removeEventListener('keydown', clearWithEscape);
+  }, [clearFocus]);
 
   const currentViewSnapshot = useMemo<InvestigationBoardViewSnapshot>(() => ({
     pan,
@@ -646,23 +736,27 @@ export default function InvestigationBoardPage() {
             <Plus size={13} />
             Adicionar
           </button>
-          <button className={`${styles.toolButton} ${showFilters ? styles.toolButtonActive : ''}`} onClick={() => setShowFilters((value) => !value)} aria-pressed={showFilters} aria-label="Mostrar filtros e camadas">
+          <button className={`${styles.toolButton} ${showFilters ? styles.toolButtonActive : ''}`} onClick={() => { setShowDiagnostics(false); setShowFilters((value) => !value); }} aria-pressed={showFilters} aria-label="Mostrar filtros e camadas">
             <SlidersHorizontal size={13} />
-            Filtros
+            Explorar
           </button>
-          <button className={`${styles.toolButton} ${showHypotheses ? styles.toolButtonActive : ''}`} onClick={() => setShowHypotheses((value) => { const next = !value; setFilters((current) => ({ ...current, layers: { ...current.layers, hypotheses: next } })); if (!next) setHighlightedFileIds(new Set()); return next; })} aria-pressed={showHypotheses}>
+          <button className={`${styles.toolButton} ${showDiagnostics ? styles.toolButtonActive : ''}`} onClick={toggleDiagnostics} aria-pressed={showDiagnostics} aria-expanded={showDiagnostics} aria-label="Mostrar diagnósticos do quadro">
+            <Wrench size={13} />
+            Diagnósticos{diagnosticIssues.length ? ` · ${diagnosticIssues.length}` : ''}
+          </button>
+          <button className={`${styles.toolButton} ${showHypotheses ? styles.toolButtonActive : ''}`} onClick={() => { setShowDiagnostics(false); setShowHypotheses((value) => { const next = !value; setFilters((current) => ({ ...current, layers: { ...current.layers, hypotheses: next } })); if (!next) setHighlightedFileIds(new Set()); return next; }); }} aria-pressed={showHypotheses}>
             <Lightbulb size={13} />
             Hipóteses
           </button>
-          <button className={`${styles.toolButton} ${showAnnotations ? styles.toolButtonActive : ''}`} onClick={() => setShowAnnotations((value) => { const next = !value; if (next) { setShowViews(false); setShowLayoutPaths(false); } return next; })} aria-pressed={showAnnotations} aria-label="Mostrar pins e agrupamentos">
+          <button className={`${styles.toolButton} ${showAnnotations ? styles.toolButtonActive : ''}`} onClick={() => { setShowDiagnostics(false); setShowAnnotations((value) => { const next = !value; if (next) { setShowViews(false); setShowLayoutPaths(false); } return next; }); }} aria-pressed={showAnnotations} aria-label="Mostrar pins e agrupamentos">
             <Layers3 size={13} />
             Anotações
           </button>
-          <button className={`${styles.toolButton} ${showViews ? styles.toolButtonActive : ''}`} onClick={() => setShowViews((value) => { const next = !value; if (next) { setShowLayoutPaths(false); setShowAnnotations(false); } return next; })} aria-pressed={showViews} aria-label="Mostrar vistas salvas">
+          <button className={`${styles.toolButton} ${showViews ? styles.toolButtonActive : ''}`} onClick={() => { setShowDiagnostics(false); setShowViews((value) => { const next = !value; if (next) { setShowLayoutPaths(false); setShowAnnotations(false); } return next; }); }} aria-pressed={showViews} aria-label="Mostrar vistas salvas">
             <Bookmark size={13} />
             Vistas{activeViewId ? ' · ativa' : ''}
           </button>
-          <button className={`${styles.toolButton} ${showLayoutPaths ? styles.toolButtonActive : ''}`} onClick={() => setShowLayoutPaths((value) => { const next = !value; if (next) { setShowViews(false); setShowAnnotations(false); } return next; })} aria-pressed={showLayoutPaths} aria-label="Mostrar auto-layout e caminhos">
+          <button className={`${styles.toolButton} ${showLayoutPaths ? styles.toolButtonActive : ''}`} onClick={() => { setShowDiagnostics(false); setShowLayoutPaths((value) => { const next = !value; if (next) { setShowViews(false); setShowAnnotations(false); } return next; }); }} aria-pressed={showLayoutPaths} aria-label="Mostrar auto-layout e caminhos">
             <Wand2 size={13} />
             Layout
           </button>
@@ -676,6 +770,7 @@ export default function InvestigationBoardPage() {
           <button className={styles.toolButton} onClick={resetView} aria-label="Centralizar">
             <Maximize size={13} />
           </button>
+          {hasFocus && <button className={styles.toolButton} onClick={clearFocus} aria-label="Limpar foco e destaques">Limpar foco</button>}
         </div>
       </div>
 
@@ -833,13 +928,20 @@ export default function InvestigationBoardPage() {
         {showFilters && (
           <InvestigationFiltersPanel
             filters={filters}
+            investigationFilters={investigationFilters}
             files={allFiles}
+            visibleFiles={visibleFiles}
+            boardFileIds={boardFileIds}
             tags={availableTags}
             visibleNodeCount={visibleNodeFileIds.size}
             officialRelationshipCount={officialRelationships.length}
             filteredOfficialRelationshipCount={filteredOfficialRelationships.length}
             onChange={updateFilters}
+            onInvestigationChange={setInvestigationFilters}
             onReset={resetFilters}
+            onFocusFile={focusFile}
+            onAddToBoard={addEvidenceToBoard}
+            onOpenFile={(fileId) => router.push(`/campaigns/${campaignId}/arquivos/${fileId}` as never)}
           />
         )}
 
@@ -903,6 +1005,7 @@ export default function InvestigationBoardPage() {
           <HypothesesPanel
             campaignId={campaignId}
             boardFileIds={boardFileIds}
+            focusHypothesisId={focusHypothesisId}
             statusFilter={filters.hypothesisStatus}
             evidenceStanceFilter={filters.evidenceStance}
             onStatusFilterChange={(value) => setFilters((current) => ({ ...current, hypothesisStatus: value }))}
@@ -912,6 +1015,13 @@ export default function InvestigationBoardPage() {
             onHighlightFiles={highlightHypothesisFiles}
           />
         )}
+
+        <InvestigationDiagnosticsPanel
+          issues={diagnosticIssues}
+          isOpen={showDiagnostics}
+          onClose={() => setShowDiagnostics(false)}
+          onAction={handleDiagnosticAction}
+        />
 
         {selectedOfficialRelationship && (
           <aside className={styles.officialRelationshipPanel} tabIndex={-1} onMouseDown={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === 'Escape') setSelectedOfficialRelationshipId(null); }} aria-label="Detalhes da relação oficial">

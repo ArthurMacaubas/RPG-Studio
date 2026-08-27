@@ -128,6 +128,18 @@ export function computeInvestigativeDiagnostics(input: InvestigativeDiagnosticsI
       ));
     }
 
+    if (hypothesis.status === 'REFUTED' && contradicts.length === 0) {
+      issues.push(diagnostic(
+        'REFUTED_HYPOTHESIS_WITHOUT_CONTRADICTION',
+        'warning',
+        hypothesis.id,
+        `A hipótese "${hypothesis.title}" está refutada sem evidência contrária vinculada.`,
+        'O estado refutado exige ao menos uma evidência com stance CONTRADICTS.',
+        [hypothesis.id],
+        action(input.campaignId, 'Abrir hipóteses')
+      ));
+    }
+
     if (contradicts.length > 0) {
       issues.push(diagnostic(
         'HYPOTHESIS_WITH_CONTRADICTORY_EVIDENCE',

@@ -29,13 +29,22 @@ describe('Q02 — filtros, busca e camadas do quadro', () => {
   });
 
   it('expõe busca, filtros combináveis, estado vazio e camadas com legenda textual', () => {
-    expect(filtersPanel).toContain('Nome, identificação ou conteúdo...');
+    expect(filtersPanel).toContain('Nome, tipo, tags ou hipótese...');
     expect(filtersPanel).toContain('Somente favoritas');
     expect(filtersPanel).toContain('Relações oficiais');
     expect(filtersPanel).toContain('Fonte canônica');
     expect(filtersPanel).toContain('Arestas visuais');
     expect(filtersPanel).toContain('Evidências');
     expect(filtersPanel).toContain('Hipóteses');
-    expect(filtersPanel).toContain('Filtros são locais e reversíveis; nenhum estado é persistido.');
+    expect(filtersPanel).toContain('Resultados locais');
+    expect(filtersPanel).toContain('Filtros, resultados e camadas são locais e reversíveis; nenhuma alteração é persistida por esta navegação.');
+  });
+
+  it('integra diagnósticos acionáveis sem importar a superfície para o jogador', () => {
+    expect(editor).toContain('computeInvestigativeDiagnostics');
+    expect(editor).toContain('InvestigationDiagnosticsPanel');
+    expect(editor).toContain('handleDiagnosticAction');
+    expect(editor).toContain('setShowDiagnostics(false)');
+    expect(playerBoard).not.toContain('InvestigationDiagnosticsPanel');
   });
 });
