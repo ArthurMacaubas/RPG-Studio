@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { assertCampaignRole } from '@/lib/access';
+import { assertCampaignRole, type CampaignAccess } from '@/lib/access';
 import type {
   CampaignHealth,
   CompilerIssue,
@@ -202,28 +202,45 @@ function addIssue(target: CompilerIssue[], issue: CompilerIssue) {
   if (!target.some((existing) => existing.id === issue.id)) target.push(issue);
 }
 
-export async function computeCampaignHealth(campaignId: string): Promise<CampaignHealth> {
-  await assertCampaignRole(campaignId, 'OWNER');
+export async function computeCampaignHealth(campaignId: string, access?: CampaignAccess): Promise<CampaignHealth> {
+  if (access) {
+    if (access.role !== 'OWNER') throw Object.assign(new Error('A operação exige acesso de Mestre.'), { status: 403 });
+  } else {
+    await assertCampaignRole(campaignId, 'OWNER');
+  }
   const errors: CompilerIssue[] = [];
   const warnings: CompilerIssue[] = [];
   const suggestions: CompilerIssue[] = [];
 
-  const campaign = await prisma.campaign.findUnique({ where: { id: campaignId }, select: { id: true, system: true } });
-  if (!campaign) throw new Error('Campanha não encontrada.');
-
   const files = await prisma.campaignFile.findMany({
     where: { campaignId, isArchived: false, isTrashed: false },
-    include: {
-      relationshipsFrom: { include: { to: true, type: true } },
-      relationshipsTo: { include: { from: true } },
-      timelineLinks: true
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      data: true,
+      relationshipsFrom: {
+        select: {
+          id: true,
+          fromId: true,
+          toId: true,
+          kind: true,
+          type: { select: { name: true } },
+          to: { select: { id: true, name: true, campaignId: true } }
+        }
+      }
     }
   });
-  const sessions = await prisma.session.findMany({ where: { campaignId }, include: { files: true } });
-  const timelineEvents = await prisma.timelineEvent.findMany({ where: { campaignId }, orderBy: [{ happenedAt: 'asc' }, { order: 'asc' }] });
+  const sessions = await prisma.session.findMany({ where: { campaignId }, select: { id: true, name: true, files: { select: { fileId: true } } } });
+  const timelineEvents = await prisma.timelineEvent.findMany({ where: { campaignId }, orderBy: [{ happenedAt: 'asc' }, { order: 'asc' }], select: { id: true, title: true, happenedAt: true } });
   const board = await prisma.boardNode.findMany({
     where: { campaignId, file: { isArchived: false, isTrashed: false } },
-    include: { file: true, edgesFrom: true, edgesTo: true }
+    select: {
+      id: true,
+      fileId: true,
+      file: { select: { id: true, name: true, type: true, data: true } },
+      edgesFrom: { select: { toNodeId: true, label: true } }
+    }
   });
   const [allFiles, hypotheses, importantRelationships, boardPins, boardGroups, boardViews] = await Promise.all([
     prisma.campaignFile.findMany({

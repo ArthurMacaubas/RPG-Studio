@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { apiErrorResponse, apiValidationErrorResponse } from '@/lib/apiErrors';
 import { campaignService } from '@/services/campaignService';
+import { withRouteTiming } from '@/lib/performance';
 
 const createSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(120),
@@ -9,16 +10,16 @@ const createSchema = z.object({
   system: z.enum(['ORDEM_PARANORMAL', 'DND_5E', 'THREEDET_VICTORY', 'CUSTOM'])
 });
 
-export async function GET(req: NextRequest) {
+export const GET = withRouteTiming('api.campaigns.list.GET', async function GET(req: NextRequest) {
   try {
     const includeArchived = req.nextUrl.searchParams.get('archived') === 'true';
     return NextResponse.json(await campaignService.list({ includeArchived }));
   } catch (error) {
     return apiErrorResponse(error, 'Não foi possível carregar as campanhas.');
   }
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withRouteTiming('api.campaigns.list.POST', async function POST(req: NextRequest) {
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
@@ -30,4 +31,4 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return apiErrorResponse(error, 'Não foi possível criar a campanha.');
   }
-}
+});

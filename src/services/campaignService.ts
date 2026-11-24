@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
-import { assertCampaignAccess, assertOwnedCampaignForWrite, getCampaignAccess } from '@/lib/access';
+import { assertCampaignAccess, assertOwnedCampaignForWrite, getCampaignAccess, type CampaignAccess } from '@/lib/access';
 import { requireUser } from '@/lib/auth';
-import type { SystemType } from '@/types';
+import type { Campaign, FavoriteFolderNavigation, SystemType } from '@/types';
 
 export interface CreateCampaignInput {
   name: string;
@@ -37,46 +37,57 @@ export const campaignService = {
   },
 
   async get(id: string) {
-    const access = await getCampaignAccess(id);
-    if (access.role === 'PLAYER') {
-      return prisma.campaign.findUnique({
-        where: { id },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          system: true,
-          coverImage: true,
-          isArchived: true,
-          ownerId: true,
-          createdAt: true,
-          updatedAt: true,
-          attributes: { orderBy: { order: 'asc' } },
-          skills: { orderBy: { order: 'asc' } },
-          classes: true,
-          races: true,
-          favoriteFolders: {
-            where: { id: { in: [] } },
-            orderBy: { order: 'asc' },
-            include: { entries: { include: { file: true }, orderBy: { order: 'asc' } } }
-          }
-        }
-      });
-    }
+    await getCampaignAccess(id);
     return prisma.campaign.findUnique({
       where: { id },
-      include: {
-        _count: { select: { files: true, sessions: true } },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        system: true,
+        coverImage: true,
+        isArchived: true,
+        ownerId: true,
+        createdAt: true,
+        updatedAt: true,
         attributes: { orderBy: { order: 'asc' } },
         skills: { orderBy: { order: 'asc' } },
         classes: true,
-        races: true,
+        races: true
+      }
+    });
+  },
+
+  async getShell(id: string, access?: CampaignAccess): Promise<(Pick<Campaign, 'id' | 'name' | 'system' | 'isArchived' | 'ownerId'> & { favoriteFolders: FavoriteFolderNavigation[] }) | null> {
+    const campaignAccess = access ?? await getCampaignAccess(id);
+    const campaign = await prisma.campaign.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        system: true,
+        isArchived: true,
+        ownerId: true,
         favoriteFolders: {
+          where: campaignAccess.role === 'OWNER' ? undefined : { id: { in: [] } },
           orderBy: { order: 'asc' },
-          include: { entries: { include: { file: true }, orderBy: { order: 'asc' } } }
+          select: {
+            id: true,
+            campaignId: true,
+            name: true,
+            icon: true,
+            color: true,
+            order: true,
+            isCollapsed: true,
+            entries: {
+              orderBy: { order: 'asc' },
+              select: { id: true, folderId: true, fileId: true, order: true, file: { select: { id: true, name: true } } }
+            }
+          }
         }
       }
     });
+    return campaign;
   },
 
   async create(input: CreateCampaignInput) {

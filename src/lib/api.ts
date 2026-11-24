@@ -88,10 +88,22 @@ export interface CampaignMemberItem {
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const isMultipart = typeof FormData !== 'undefined' && init?.body instanceof FormData;
+  const startedAt = typeof performance !== 'undefined' ? performance.now() : 0;
   const res = await fetch(url, {
     ...init,
     headers: isMultipart ? init?.headers : { 'Content-Type': 'application/json', ...(init?.headers ?? {}) }
   });
+  if (process.env.NEXT_PUBLIC_PERFORMANCE_LOGS === 'true') {
+    const parsedUrl = new URL(url, typeof window === 'undefined' ? 'http://rpg-studio.local' : window.location.origin);
+    console.info('[perf]', JSON.stringify({
+      scope: 'client-request',
+      method: init?.method ?? 'GET',
+      path: parsedUrl.pathname,
+      status: res.status,
+      durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
+      responseBytes: Number(res.headers.get('content-length') ?? 0) || undefined
+    }));
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body?.error?.formErrors?.[0] ?? body?.error ?? 'Erro na requisição');
@@ -146,6 +158,13 @@ export interface ListFilesQuery {
   search?: string;
   sort?: SortField;
   direction?: 'asc' | 'desc';
+  includeContent?: boolean;
+  includeData?: boolean;
+}
+
+export interface FileListPage {
+  files: CampaignFile[];
+  hasMore: boolean;
 }
 
 export const playerCharacterApi = {
@@ -204,7 +223,23 @@ export const filesApi = {
     if (query.search) params.set('search', query.search);
     if (query.sort) params.set('sort', query.sort);
     if (query.direction) params.set('dir', query.direction);
+    if (query.includeContent) params.set('includeContent', 'true');
+    if (query.includeData) params.set('includeData', 'true');
     return request<CampaignFile[]>(`/api/campaigns/${campaignId}/files?${params.toString()}`);
+  },
+
+  listPage(campaignId: string, query: ListFilesQuery = {}, page = 0, pageSize = 40) {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (query.scope) params.set('scope', query.scope);
+    if (query.type) params.set('type', query.type);
+    if (query.tagIds?.length) params.set('tags', query.tagIds.join(','));
+    if (query.favoritesOnly) params.set('favorites', 'true');
+    if (query.search) params.set('search', query.search);
+    if (query.sort) params.set('sort', query.sort);
+    if (query.direction) params.set('dir', query.direction);
+    if (query.includeContent) params.set('includeContent', 'true');
+    if (query.includeData) params.set('includeData', 'true');
+    return request<FileListPage>(`/api/campaigns/${campaignId}/files?${params.toString()}`);
   },
 
   counts(campaignId: string) {

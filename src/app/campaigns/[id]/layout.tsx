@@ -6,6 +6,7 @@ import { CampaignHeader } from '@/components/CampaignHeader';
 import { CampaignThemeRuntime } from '@/components/CampaignThemeRuntime';
 import { themeConfigToStyle } from '@/lib/campaignTheme';
 import { campaignThemeService } from '@/services/campaignThemeService';
+import { measureServer } from '@/lib/performance';
 import styles from './layout.module.css';
 
 export default async function CampaignLayout({
@@ -15,29 +16,13 @@ export default async function CampaignLayout({
   children: React.ReactNode;
   params: { id: string };
 }) {
-  const [campaign, access, publishedTheme] = await Promise.all([
-    campaignService.get(params.id),
-    getCampaignAccess(params.id),
+  const access = await getCampaignAccess(params.id);
+  const [campaign, publishedTheme] = await Promise.all([
+    measureServer('page.campaign.shell', () => campaignService.getShell(params.id, access)),
     campaignThemeService.publishedForCampaign(params.id)
   ]);
 
   if (!campaign) notFound();
-
-  const favoriteFolders = campaign.favoriteFolders.map((folder) => ({
-    ...folder,
-    entries: folder.entries.map((entry) => ({
-      ...entry,
-      file: entry.file
-        ? {
-            ...entry.file,
-            data: (entry.file.data ?? {}) as Record<string, unknown>,
-            trashedAt: entry.file.trashedAt?.toISOString() ?? null,
-            createdAt: entry.file.createdAt.toISOString(),
-            updatedAt: entry.file.updatedAt.toISOString()
-          }
-        : undefined
-    }))
-  }));
 
   return (
     <div
@@ -55,7 +40,7 @@ export default async function CampaignLayout({
         logoUrl={publishedTheme?.config.identity.logoUrl}
         symbolUrl={publishedTheme?.config.identity.symbolUrl}
         role={access.role}
-        favoriteFolders={favoriteFolders}
+        favoriteFolders={campaign.favoriteFolders}
       />
       <div className={styles.content}>
         <CampaignHeader
