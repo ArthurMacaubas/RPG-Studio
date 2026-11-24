@@ -14,6 +14,7 @@ import { useSelection } from '@/hooks/useSelection';
 import type { CampaignFile, ExplorerScope, FileType, SortField, Tag, ViewMode } from '@/types';
 import { FILE_TYPE_LABELS } from '@/types';
 import styles from './FileExplorer.module.css';
+import type { FileExplorerInitialData } from '@/services/fileExplorerService';
 
 interface FileExplorerProps {
   campaignId: string;
@@ -21,6 +22,7 @@ interface FileExplorerProps {
   fixedType?: FileType;
   title: string;
   breadcrumb: { label: string; href?: string }[];
+  initialData?: FileExplorerInitialData;
 }
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
@@ -30,19 +32,22 @@ const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: 'type', label: 'Tipo' }
 ];
 
-export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb }: FileExplorerProps) {
+export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb, initialData }: FileExplorerProps) {
   const router = useRouter();
-  const [files, setFiles] = useState<CampaignFile[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [files, setFiles] = useState<CampaignFile[]>(initialData?.files ?? []);
+  const [tags, setTags] = useState<Tag[]>(initialData?.tags ?? []);
   const [activeTagIds, setActiveTagIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 250);
   const [sort, setSort] = useState<SortField>('updatedAt');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialData);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const pageRef = useRef(0);
+  const initialDataKey = initialData ? `${campaignId}:${scope}:${fixedType ?? ''}` : null;
+  const appliedInitialDataKeyRef = useRef(initialDataKey);
+  const skipInitialLoadRef = useRef(Boolean(initialData));
   const [showNewModal, setShowNewModal] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number; file: CampaignFile } | null>(null);
 
@@ -70,10 +75,23 @@ export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb }
   }, [campaignId, scope, fixedType, debouncedSearch, activeTagIds, sort]);
 
   useEffect(() => {
+    if (initialData && appliedInitialDataKeyRef.current !== initialDataKey) {
+      setFiles(initialData.files);
+      setTags(initialData.tags);
+      setHasMore(initialData.hasMore);
+      pageRef.current = 0;
+      appliedInitialDataKeyRef.current = initialDataKey;
+      return;
+    }
+    if (skipInitialLoadRef.current) {
+      skipInitialLoadRef.current = false;
+      return;
+    }
     void load();
-  }, [load]);
+  }, [initialData, initialDataKey, load]);
 
   useEffect(() => {
+    if (initialData) return;
     let cancelled = false;
     tagsApi.list(campaignId).then((result) => {
       if (!cancelled) setTags(result);
@@ -81,7 +99,7 @@ export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb }
     return () => {
       cancelled = true;
     };
-  }, [campaignId]);
+  }, [campaignId, initialData]);
 
   function openFile(file: CampaignFile) {
     router.push(`/campaigns/${campaignId}/arquivos/${file.id}` as never);

@@ -6,7 +6,7 @@ import { logHistory } from './historyService';
 import { favoriteFolderService } from './favoriteFolderService';
 import { requireUser } from '@/lib/auth';
 import { recordAudit } from '@/services/auditService';
-import { getViewerContext, publishedFileWhere, publicationSelect } from '@/lib/publicationPolicy';
+import { getViewerContext, publishedFileWhere, publicationSelect, type ViewerContext } from '@/lib/publicationPolicy';
 
 export interface ListFilesParams {
   campaignId: string;
@@ -21,6 +21,7 @@ export interface ListFilesParams {
   includeData?: boolean;
   take?: number;
   skip?: number;
+  viewer?: ViewerContext;
 }
 
 export interface CreateFileInput {
@@ -94,9 +95,10 @@ export const fileService = {
     includeContent = false,
     includeData = false,
     take,
-    skip
+    skip,
+    viewer: providedViewer
   }: ListFilesParams) {
-    const viewer = await getViewerContext(campaignId, { requirePlayerMode: true });
+    const viewer = providedViewer ?? await getViewerContext(campaignId, { requirePlayerMode: true });
     return prisma.campaignFile.findMany({
       where: {
         AND: [
