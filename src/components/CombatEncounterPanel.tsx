@@ -56,8 +56,8 @@ export function CombatEncounterPanel({ campaignId, sessionId }: { campaignId: st
     try {
       const [combatEncounters, characters, threats] = await Promise.all([
         combatApi.list(campaignId),
-        filesApi.list(campaignId, { scope: 'active', type: 'CHARACTER', sort: 'name', direction: 'asc' }),
-        filesApi.list(campaignId, { scope: 'active', type: 'THREAT', sort: 'name', direction: 'asc' })
+        filesApi.list(campaignId, { scope: 'active', type: 'CHARACTER', sort: 'name', direction: 'asc', includeData: true }),
+        filesApi.list(campaignId, { scope: 'active', type: 'THREAT', sort: 'name', direction: 'asc', includeData: true })
       ]);
       setEncounters(combatEncounters);
       setSources([...characters, ...threats]);

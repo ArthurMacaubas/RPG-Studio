@@ -37,7 +37,7 @@ import {
 import styles from './Sidebar.module.css';
 import { useTheme } from '@/hooks/useTheme';
 import { FavoritesSection } from './FavoritesSection';
-import type { FavoriteFolder } from '@/types';
+import type { FavoriteFolderNavigation } from '@/types';
 import type { CampaignRole } from '@/lib/access';
 
 const NAV_ITEMS = [
@@ -85,7 +85,7 @@ interface SidebarProps {
   logoUrl?: string;
   symbolUrl?: string;
   role?: CampaignRole;
-  favoriteFolders?: FavoriteFolder[];
+  favoriteFolders?: FavoriteFolderNavigation[];
 }
 
 export function Sidebar({ campaignId, campaignName, campaignSubtitle, logoUrl, symbolUrl, role, favoriteFolders = [] }: SidebarProps) {

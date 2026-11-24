@@ -139,6 +139,10 @@ export interface FavoriteEntry {
   file?: CampaignFile;
 }
 
+export interface FavoriteFolderNavigation extends Omit<FavoriteFolder, 'entries'> {
+  entries?: Array<Pick<FavoriteEntry, 'id' | 'folderId' | 'fileId' | 'order'> & { file?: Pick<CampaignFile, 'id' | 'name'> }>;
+}
+
 export interface CampaignFile {
   id: string;
   campaignId: string;

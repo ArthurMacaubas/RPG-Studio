@@ -301,6 +301,8 @@ model CampaignFile {
   @@unique([campaignId, id], name: "CampaignFile_campaignId_id_key")
   @@index([campaignId, type])
   @@index([campaignId, isTrashed])
+  @@index([campaignId, isTrashed, isArchived, updatedAt])
+  @@index([campaignId, type, isTrashed, isArchived, updatedAt])
 }
 
 model Attachment {

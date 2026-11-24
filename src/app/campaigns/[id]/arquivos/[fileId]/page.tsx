@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Star,
@@ -25,20 +26,22 @@ import {
 } from 'lucide-react';
 import { FileTypeIcon } from '@/components/fileTypeIcon';
 import { TagChip } from '@/components/TagChip';
-import { HistoryTimeline } from '@/components/HistoryTimeline';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { CharacterSheet } from '@/components/CharacterSheet';
-import { ChecklistEditor } from '@/components/ChecklistEditor';
-import { AttachmentsPanel } from '@/components/AttachmentsPanel';
-import { FileAccessPanel } from '@/components/FileAccessPanel';
-import { RelationshipManager } from '@/components/RelationshipManager';
 import { filesApi, tagsApi, campaignsApi } from '@/lib/api';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { CampaignFile, Tag, SystemType, SheetData, ChecklistItem } from '@/types';
 import { FILE_TYPE_LABELS } from '@/types';
 import { markdownOutline, markdownToHtml } from '@/lib/markdown';
-import { DocumentEditor } from '@/components/DocumentEditor';
 import styles from './page.module.css';
+
+const deferredPanelFallback = () => <div style={{ minHeight: 24 }} aria-hidden="true" />;
+const CharacterSheet = dynamic(() => import('@/components/CharacterSheet').then((module) => module.CharacterSheet), { ssr: false, loading: deferredPanelFallback });
+const ChecklistEditor = dynamic(() => import('@/components/ChecklistEditor').then((module) => module.ChecklistEditor), { ssr: false, loading: deferredPanelFallback });
+const AttachmentsPanel = dynamic(() => import('@/components/AttachmentsPanel').then((module) => module.AttachmentsPanel), { ssr: false, loading: deferredPanelFallback });
+const FileAccessPanel = dynamic(() => import('@/components/FileAccessPanel').then((module) => module.FileAccessPanel), { ssr: false, loading: deferredPanelFallback });
+const RelationshipManager = dynamic(() => import('@/components/RelationshipManager').then((module) => module.RelationshipManager), { ssr: false, loading: deferredPanelFallback });
+const HistoryTimeline = dynamic(() => import('@/components/HistoryTimeline').then((module) => module.HistoryTimeline), { ssr: false, loading: deferredPanelFallback });
+const DocumentEditor = dynamic(() => import('@/components/DocumentEditor').then((module) => module.DocumentEditor), { ssr: false, loading: deferredPanelFallback });
 
 export default function FileEditorPage() {
   const params = useParams<{ id: string; fileId: string }>();
@@ -107,7 +110,7 @@ export default function FileEditorPage() {
     filesApi
       .update(fileId, { name: debouncedName, description: debouncedDescription, content: debouncedContent })
       .then((updated) => {
-        setFile(updated);
+        setFile((current) => current ? { ...current, ...updated } : updated);
         setLastSavedAt(new Date(updated.updatedAt));
         setSaveStatus('saved');
       })

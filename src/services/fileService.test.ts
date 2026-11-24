@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   campaignFileFindUnique: vi.fn(),
   campaignFileFindFirst: vi.fn(),
+  campaignFileFindMany: vi.fn(),
   commentCreate: vi.fn(),
   getViewerContext: vi.fn(),
   publishedFileWhere: vi.fn(),
@@ -16,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    campaignFile: { findUnique: mocks.campaignFileFindUnique, findFirst: mocks.campaignFileFindFirst, create: mocks.campaignFileCreate },
+    campaignFile: { findUnique: mocks.campaignFileFindUnique, findFirst: mocks.campaignFileFindFirst, findMany: mocks.campaignFileFindMany, create: mocks.campaignFileCreate },
     comment: { create: mocks.commentCreate },
     tag: { findMany: mocks.tagFindMany },
     $transaction: mocks.transaction,
@@ -44,6 +45,7 @@ describe('fileService publication boundary', () => {
     mocks.getViewerContext.mockResolvedValue({ kind: 'PLAYER', campaignId: 'campaign-1', userId: 'player-1', audience: 'P1' });
     mocks.publishedFileWhere.mockReturnValue({ campaignId: 'campaign-1', isArchived: false, isTrashed: false, playerVisibility: { isVisible: true } });
     mocks.recordAudit.mockResolvedValue(undefined);
+    mocks.campaignFileFindMany.mockResolvedValue([]);
     mocks.transaction.mockImplementation((callback) => callback({
       tag: { findMany: mocks.tagFindMany },
       campaignFile: { create: mocks.campaignFileCreate }
@@ -54,6 +56,20 @@ describe('fileService publication boundary', () => {
     mocks.campaignFileFindFirst.mockResolvedValue(null);
     await expect(fileService.get('file-private')).resolves.toBeNull();
     expect(mocks.publishedFileWhere).toHaveBeenCalledWith(expect.objectContaining({ kind: 'PLAYER', userId: 'player-1' }));
+  });
+
+  it('mantém a política de publicação ao combinar busca e paginação da biblioteca', async () => {
+    await fileService.list({ campaignId: 'campaign-1', search: 'pista', take: 40, skip: 0 });
+    expect(mocks.campaignFileFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        AND: [
+          expect.objectContaining({ playerVisibility: { isVisible: true } }),
+          expect.objectContaining({ OR: expect.any(Array) })
+        ]
+      },
+      take: 40,
+      skip: 0
+    }));
   });
 
   it('recusa comentário de arquivo sem sessão antes de qualquer escrita', async () => {
