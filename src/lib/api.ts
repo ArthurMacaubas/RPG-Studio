@@ -43,6 +43,7 @@ import type {
   CombatParticipant,
   PlayerCombatView
 } from '@/types';
+import type { CampaignThemeConfig } from '@/lib/campaignTheme';
 
 export interface PublicUser {
   id: string;
@@ -118,8 +119,9 @@ export const invitesApi = {
     const response = await request<{ invites: ReceivedInvite[] }>('/api/invites');
     return response.invites ?? [];
   },
-  preview(token: string) {
-    return request<InvitePreview>(`/api/invites/${encodeURIComponent(token)}`);
+  async preview(token: string) {
+    const response = await request<{ invite: InvitePreview }>(`/api/invites/${encodeURIComponent(token)}`);
+    return response.invite;
   },
   accept(token: string) {
     return request<{ member: { id: string; role: 'PLAYER' }; campaign: InvitePreview['campaign'] }>(`/api/invites/${encodeURIComponent(token)}/accept`, { method: 'POST' });
@@ -348,6 +350,49 @@ export const campaignsApi = {
   },
   create(input: { name: string; description?: string; system: Campaign['system'] }) {
     return request<Campaign>('/api/campaigns', { method: 'POST', body: JSON.stringify(input) });
+  },
+  update(id: string, input: { name?: string; description?: string; coverImage?: string; isArchived?: boolean; system?: Campaign['system'] }) {
+    return request<Campaign>(`/api/campaigns/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+  }
+};
+
+export interface CampaignThemeRecord {
+  id: string;
+  campaignId: string;
+  createdById: string;
+  name: string;
+  draftConfig: CampaignThemeConfig;
+  publishedConfig: CampaignThemeConfig | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ThemePresetRecord {
+  id: string;
+  name: string;
+  description?: string;
+  official: boolean;
+  config: CampaignThemeConfig;
+}
+
+export const campaignThemesApi = {
+  list(campaignId: string) {
+    return request<{ activeThemeId: string | null; themes: CampaignThemeRecord[]; presets: ThemePresetRecord[] }>(`/api/campaigns/${campaignId}/themes`);
+  },
+  create(campaignId: string, input: { name: string; presetId?: string; config?: CampaignThemeConfig; action?: 'create' | 'import' }) {
+    return request<CampaignThemeRecord>(`/api/campaigns/${campaignId}/themes`, { method: 'POST', body: JSON.stringify(input) });
+  },
+  saveDraft(campaignId: string, themeId: string, input: { name?: string; config?: CampaignThemeConfig }) {
+    return request<CampaignThemeRecord>(`/api/campaigns/${campaignId}/themes/${themeId}`, { method: 'PATCH', body: JSON.stringify(input) });
+  },
+  action(campaignId: string, themeId: string, input: { action: 'publish' | 'apply' | 'restore' } | { action: 'duplicate' | 'savePreset'; name: string }) {
+    return request<CampaignThemeRecord | { activeThemeId: string }>(`/api/campaigns/${campaignId}/themes/${themeId}/actions`, { method: 'POST', body: JSON.stringify(input) });
+  },
+  uploadAsset(campaignId: string, file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    return request<{ url: string }>(`/api/campaigns/${campaignId}/themes/assets`, { method: 'POST', body: form });
   }
 };
 

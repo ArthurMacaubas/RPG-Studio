@@ -6,7 +6,7 @@ import { campaignService } from '@/services/campaignService';
 const createSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(120),
   description: z.string().max(2000).optional(),
-  system: z.enum(['ORDEM_PARANORMAL', 'DND_5E', 'CUSTOM'])
+  system: z.enum(['ORDEM_PARANORMAL', 'DND_5E', 'THREEDET_VICTORY', 'CUSTOM'])
 });
 
 export async function GET(req: NextRequest) {
