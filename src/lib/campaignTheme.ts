@@ -7,7 +7,10 @@ const imageValue = z.string().max(850_000).refine(
   'Use uma imagem enviada pelo editor ou um caminho interno seguro.'
 );
 
-export const FONT_OPTIONS = ['Inter', 'Cinzel', 'Noto Serif JP', 'Space Grotesk', 'Georgia', 'System'] as const;
+export const FONT_OPTIONS = [
+  'Inter', 'Cinzel', 'Noto Serif JP', 'Space Grotesk', 'Cormorant Garamond', 'Source Serif 4',
+  'Rajdhani', 'JetBrains Mono', 'Georgia', 'System'
+] as const;
 
 export const campaignThemeConfigSchema = z.object({
   version: z.literal(1),
@@ -84,13 +87,56 @@ export const ARASHI_THEME: CampaignThemeConfig = {
   preferences: { mode: 'dark', backgroundPosition: 'center', backgroundOpacity: 0.24, imageOverlay: '#0D0D0F', imageOverlayOpacity: 0.78, decorativeElements: true }
 };
 
-export const OFFICIAL_THEME_PRESETS = [{ id: 'official-arashi', name: 'O Sangue de Arashi', official: true, config: ARASHI_THEME }] as const;
+export const MEDIEVAL_FANTASY_THEME: CampaignThemeConfig = {
+  version: 1,
+  identity: { logoUrl: '', symbolUrl: '', bannerUrl: '', backgroundImageUrl: '', faviconUrl: '', subtitle: 'Grimório das Terras Antigas' },
+  colors: {
+    background: '#181610', backgroundSecondary: '#211E17', surface: '#2D281F', primary: '#79613B',
+    secondary: '#48543A', accent: '#C6A66B', text: '#F0E5CF', textSecondary: '#B1A38B',
+    border: '#4A4030', links: '#D4B77C', complementary: '#352F23'
+  },
+  typography: { headingFont: 'Cinzel', bodyFont: 'Source Serif 4', accentFont: 'Cormorant Garamond', weight: 500 },
+  components: { borderRadius: 6, shadowIntensity: 0.4, panelOpacity: 0.96, texture: 'paper', animationIntensity: 0.5, dividerStyle: 'ornamental' },
+  preferences: { mode: 'dark', backgroundPosition: 'center', backgroundOpacity: 0.16, imageOverlay: '#181610', imageOverlayOpacity: 0.78, decorativeElements: true }
+};
+
+export const CYBERPUNK_THEME: CampaignThemeConfig = {
+  version: 1,
+  identity: { logoUrl: '', symbolUrl: '', bannerUrl: '', backgroundImageUrl: '', faviconUrl: '', subtitle: 'Nó clandestino · Acesso restrito' },
+  colors: {
+    background: '#080C12', backgroundSecondary: '#0F1621', surface: '#172230', primary: '#00B8C8',
+    secondary: '#A92E68', accent: '#F2C94C', text: '#E0EDF5', textSecondary: '#8295A8',
+    border: '#29394B', links: '#42D9E8', complementary: '#1B2B3D'
+  },
+  typography: { headingFont: 'Rajdhani', bodyFont: 'Inter', accentFont: 'JetBrains Mono', weight: 500 },
+  components: { borderRadius: 2, shadowIntensity: 0.45, panelOpacity: 0.94, texture: 'grain', animationIntensity: 0.7, dividerStyle: 'dashed' },
+  preferences: { mode: 'dark', backgroundPosition: 'center', backgroundOpacity: 0.14, imageOverlay: '#080C12', imageOverlayOpacity: 0.72, decorativeElements: true }
+};
+
+export interface OfficialThemePreset {
+  id: string;
+  name: string;
+  description: string;
+  official: true;
+  config: CampaignThemeConfig;
+}
+
+export const OFFICIAL_THEME_PRESETS: readonly OfficialThemePreset[] = [
+  { id: 'official-default', name: 'RPG Studio', description: 'Tema padrão da plataforma', official: true, config: DEFAULT_CAMPAIGN_THEME },
+  { id: 'official-arashi', name: 'O Sangue de Arashi', description: 'Dark fantasy samurai', official: true, config: ARASHI_THEME },
+  { id: 'official-medieval-fantasy', name: 'Medieval Fantasy', description: 'Fantasia medieval e cartográfica', official: true, config: MEDIEVAL_FANTASY_THEME },
+  { id: 'official-cyberpunk', name: 'Cyberpunk', description: 'Distopia futurista clandestina', official: true, config: CYBERPUNK_THEME }
+];
 
 const FONT_STACKS: Record<(typeof FONT_OPTIONS)[number], string> = {
   Inter: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
   Cinzel: "'Cinzel', 'Times New Roman', serif",
   'Noto Serif JP': "'Noto Serif JP', 'Yu Mincho', serif",
   'Space Grotesk': "'Space Grotesk', 'Inter', sans-serif",
+  'Cormorant Garamond': "'Cormorant Garamond', Georgia, serif",
+  'Source Serif 4': "'Source Serif 4', Georgia, serif",
+  Rajdhani: "'Rajdhani', 'Arial Narrow', sans-serif",
+  'JetBrains Mono': "'JetBrains Mono', ui-monospace, monospace",
   Georgia: "Georgia, 'Times New Roman', serif",
   System: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 };

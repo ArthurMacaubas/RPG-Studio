@@ -10,6 +10,13 @@
 .createRow input, .createRow select, .createRow button, .themeName, .controlPanel input:not([type='range']):not([type='color']):not([type='checkbox']), .controlPanel select { min-height: 38px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-canvas); color: var(--color-text); padding: 8px 10px; }
 .createRow button, .toolbar button, .publishActions button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; }
 .createRow button { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-background); font-weight: 700; }
+.presetPreview { display: flex; align-items: center; gap: 11px; margin-top: 12px; padding: 9px 11px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: var(--color-canvas); }
+.presetSwatches { display: flex; gap: 3px; flex: 0 0 auto; }
+.presetSwatches span { width: 22px; height: 30px; border: 1px solid var(--color-border); border-radius: 3px; }
+.presetPreview strong, .presetPreview small { display: block; }
+.presetPreview strong { color: var(--color-text); font-size: 11px; }
+.presetPreview small { margin-top: 2px; color: var(--color-text-muted); font-size: 10px; }
+.presetPreviewHint { margin-left: auto; color: var(--color-text-faint); font-size: 9px; }
 .themeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 9px; margin-top: 14px; }
 .themeItem { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; min-height: 62px; padding: 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-canvas); color: var(--color-text); text-align: left; cursor: pointer; }
 .themeItem:hover, .themeItemSelected { border-color: var(--color-accent); background: var(--color-accent-muted); }
@@ -94,4 +101,5 @@
 .safetyNote { margin: 10px 2px 0; color: var(--color-text-faint); font-size: 9px; line-height: 1.5; }
 @media (max-width: 1100px) { .columns { grid-template-columns: 1fr; } .previewColumn { position: static; } .imageGrid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 720px) { .library, .controlPanel { padding: var(--space-4); } .createRow, .toolbar { grid-template-columns: 1fr; } .createRow { display: grid; } .toolbar { display: grid; } .toolbarActions { display: grid; grid-template-columns: repeat(3, 1fr); } .colorGrid, .threeColumns { grid-template-columns: 1fr 1fr; } .imageGrid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .presetPreview { align-items: flex-start; flex-wrap: wrap; } .presetPreviewHint { width: 100%; margin-left: 0; } }
 @media (max-width: 480px) { .colorGrid, .twoColumns, .threeColumns, .rangeGrid { grid-template-columns: 1fr; } .preview { grid-template-columns: 82px 1fr; } .publishActions { grid-template-columns: 1fr; } .applyButton { grid-column: auto; } }

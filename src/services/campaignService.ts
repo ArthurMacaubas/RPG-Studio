@@ -14,6 +14,7 @@ export interface UpdateCampaignInput {
   description?: string;
   coverImage?: string;
   isArchived?: boolean;
+  system?: SystemType;
 }
 
 // All campaign persistence goes through this service — API routes and
@@ -84,7 +85,7 @@ export const campaignService = {
       data: {
         name: input.name,
         description: input.description,
-        system: input.system,
+        system: input.system as any,
         ownerId: user.id,
         favoriteFolders: {
           create: [{ name: 'Sessão Atual', order: 0 }]
@@ -98,7 +99,7 @@ export const campaignService = {
 
   async update(id: string, input: UpdateCampaignInput) {
     await assertOwnedCampaignForWrite(id);
-    return prisma.campaign.update({ where: { id }, data: input });
+    return prisma.campaign.update({ where: { id }, data: { ...input, system: input.system as any } });
   },
 
   async archive(id: string) {
