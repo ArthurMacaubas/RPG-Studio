@@ -4,6 +4,20 @@ Software profissional para criação, organização e execução de campanhas de
 Next.js (App Router) + TypeScript + CSS Modules no frontend, Node.js + Prisma +
 PostgreSQL no backend.
 
+## Sobre esta fork
+
+Esta é a fork de desenvolvimento do [RPG Campaign Studio](https://github.com/ArthurMacaubas/RPG-Studio), mantida para evolução do produto, preparação de contribuições genéricas ao upstream e preservação separada das personalizações de **O Sangue de Arashi**. A documentação técnica está em [`docs/INDEX.md`](docs/INDEX.md); o plano de contribuições está em [`CONTRIBUTION_PLAN.md`](CONTRIBUTION_PLAN.md).
+
+O upstream não contém, neste checkout, `LICENSE`, `CONTRIBUTING.md` ou `CODE_OF_CONDUCT.md` versionados. A fork preserva os créditos e não declara uma licença adicional; esse ponto exige confirmação dos mantenedores antes de publicar contribuições.
+
+## Requisitos e comandos principais
+
+- Node.js compatível com Next.js 14, npm e PostgreSQL/Neon.
+- `npm install`, `npx prisma generate` e `npx prisma migrate deploy` preparam uma base autorizada.
+- `npm run dev`, `npm run lint`, `npm run test:run` e `npm run build` executam desenvolvimento e validações.
+
+Para o fluxo completo de ambiente, banco, deploy, segurança e contribuição, consulte [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md), [`docs/DATABASE.md`](docs/DATABASE.md), [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) e [`docs/UPSTREAM.md`](docs/UPSTREAM.md).
+
 O escopo pedido é grande demais para uma única entrega. **V1** trouxe a
 arquitetura completa. **V2** implementou o módulo de Arquivos por completo.
 **V3** implementou os sistemas de RPG na ficha de NPC/Personagem, checklist

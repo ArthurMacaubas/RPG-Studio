@@ -11,6 +11,7 @@ import type {
   RelationshipKind,
   RelationshipType,
   RelationshipVisibility,
+  RelationshipGraphData,
   CampaignDetail,
   CampaignAttributeDef,
   CampaignSkillDef,
@@ -43,6 +44,7 @@ import type {
   CombatParticipant,
   PlayerCombatView
 } from '@/types';
+import type { CampaignThemeConfig } from '@/lib/campaignTheme';
 
 export interface PublicUser {
   id: string;
@@ -87,10 +89,22 @@ export interface CampaignMemberItem {
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const isMultipart = typeof FormData !== 'undefined' && init?.body instanceof FormData;
+  const startedAt = typeof performance !== 'undefined' ? performance.now() : 0;
   const res = await fetch(url, {
     ...init,
     headers: isMultipart ? init?.headers : { 'Content-Type': 'application/json', ...(init?.headers ?? {}) }
   });
+  if (process.env.NEXT_PUBLIC_PERFORMANCE_LOGS === 'true') {
+    const parsedUrl = new URL(url, typeof window === 'undefined' ? 'http://rpg-studio.local' : window.location.origin);
+    console.info('[perf]', JSON.stringify({
+      scope: 'client-request',
+      method: init?.method ?? 'GET',
+      path: parsedUrl.pathname,
+      status: res.status,
+      durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
+      responseBytes: Number(res.headers.get('content-length') ?? 0) || undefined
+    }));
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body?.error?.formErrors?.[0] ?? body?.error ?? 'Erro na requisição');
@@ -118,8 +132,9 @@ export const invitesApi = {
     const response = await request<{ invites: ReceivedInvite[] }>('/api/invites');
     return response.invites ?? [];
   },
-  preview(token: string) {
-    return request<InvitePreview>(`/api/invites/${encodeURIComponent(token)}`);
+  async preview(token: string) {
+    const response = await request<{ invite: InvitePreview }>(`/api/invites/${encodeURIComponent(token)}`);
+    return response.invite;
   },
   accept(token: string) {
     return request<{ member: { id: string; role: 'PLAYER' }; campaign: InvitePreview['campaign'] }>(`/api/invites/${encodeURIComponent(token)}/accept`, { method: 'POST' });
@@ -144,6 +159,13 @@ export interface ListFilesQuery {
   search?: string;
   sort?: SortField;
   direction?: 'asc' | 'desc';
+  includeContent?: boolean;
+  includeData?: boolean;
+}
+
+export interface FileListPage {
+  files: CampaignFile[];
+  hasMore: boolean;
 }
 
 export const playerCharacterApi = {
@@ -202,7 +224,23 @@ export const filesApi = {
     if (query.search) params.set('search', query.search);
     if (query.sort) params.set('sort', query.sort);
     if (query.direction) params.set('dir', query.direction);
+    if (query.includeContent) params.set('includeContent', 'true');
+    if (query.includeData) params.set('includeData', 'true');
     return request<CampaignFile[]>(`/api/campaigns/${campaignId}/files?${params.toString()}`);
+  },
+
+  listPage(campaignId: string, query: ListFilesQuery = {}, page = 0, pageSize = 40) {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (query.scope) params.set('scope', query.scope);
+    if (query.type) params.set('type', query.type);
+    if (query.tagIds?.length) params.set('tags', query.tagIds.join(','));
+    if (query.favoritesOnly) params.set('favorites', 'true');
+    if (query.search) params.set('search', query.search);
+    if (query.sort) params.set('sort', query.sort);
+    if (query.direction) params.set('dir', query.direction);
+    if (query.includeContent) params.set('includeContent', 'true');
+    if (query.includeData) params.set('includeData', 'true');
+    return request<FileListPage>(`/api/campaigns/${campaignId}/files?${params.toString()}`);
   },
 
   counts(campaignId: string) {
@@ -348,6 +386,49 @@ export const campaignsApi = {
   },
   create(input: { name: string; description?: string; system: Campaign['system'] }) {
     return request<Campaign>('/api/campaigns', { method: 'POST', body: JSON.stringify(input) });
+  },
+  update(id: string, input: { name?: string; description?: string; coverImage?: string; isArchived?: boolean; system?: Campaign['system'] }) {
+    return request<Campaign>(`/api/campaigns/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+  }
+};
+
+export interface CampaignThemeRecord {
+  id: string;
+  campaignId: string;
+  createdById: string;
+  name: string;
+  draftConfig: CampaignThemeConfig;
+  publishedConfig: CampaignThemeConfig | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ThemePresetRecord {
+  id: string;
+  name: string;
+  description?: string;
+  official: boolean;
+  config: CampaignThemeConfig;
+}
+
+export const campaignThemesApi = {
+  list(campaignId: string) {
+    return request<{ activeThemeId: string | null; themes: CampaignThemeRecord[]; presets: ThemePresetRecord[] }>(`/api/campaigns/${campaignId}/themes`);
+  },
+  create(campaignId: string, input: { name: string; presetId?: string; config?: CampaignThemeConfig; action?: 'create' | 'import' }) {
+    return request<CampaignThemeRecord>(`/api/campaigns/${campaignId}/themes`, { method: 'POST', body: JSON.stringify(input) });
+  },
+  saveDraft(campaignId: string, themeId: string, input: { name?: string; config?: CampaignThemeConfig }) {
+    return request<CampaignThemeRecord>(`/api/campaigns/${campaignId}/themes/${themeId}`, { method: 'PATCH', body: JSON.stringify(input) });
+  },
+  action(campaignId: string, themeId: string, input: { action: 'publish' | 'apply' | 'restore' } | { action: 'duplicate' | 'savePreset'; name: string }) {
+    return request<CampaignThemeRecord | { activeThemeId: string }>(`/api/campaigns/${campaignId}/themes/${themeId}/actions`, { method: 'POST', body: JSON.stringify(input) });
+  },
+  uploadAsset(campaignId: string, file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    return request<{ url: string }>(`/api/campaigns/${campaignId}/themes/assets`, { method: 'POST', body: form });
   }
 };
 
@@ -465,7 +546,7 @@ export const relationshipsApi = {
   },
   graph(campaignId: string, fileIds?: string[]) {
     const query = fileIds ? `?fileIds=${encodeURIComponent([...new Set(fileIds)].join(','))}` : '';
-    return request<{ nodes: Array<{ id: string; name: string; type: FileType }>; edges: Array<{ id: string; sourceId: string; targetId: string; type: RelationshipType; label: string | null; description: string | null; importance: RelationshipImportance; visibility: RelationshipVisibility }> }>(`/api/campaigns/${campaignId}/relationships/graph${query}`);
+    return request<RelationshipGraphData>(`/api/campaigns/${campaignId}/relationships/graph${query}`);
   },
   create(input: { fromId: string; toId: string; typeId?: string; typeKey?: string; kind?: RelationshipKind; label?: string; description?: string; importance?: RelationshipImportance; visibility?: RelationshipVisibility }) {
     return request<Relationship>(`/api/relationships`, { method: 'POST', body: JSON.stringify(input) });

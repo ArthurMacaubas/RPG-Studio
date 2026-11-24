@@ -10,13 +10,15 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 enum SystemType {
   ORDEM_PARANORMAL
   DND_5E
+  THREEDET_VICTORY
   CUSTOM
 }
 
@@ -130,20 +132,24 @@ model User {
   sentInvites    CampaignInvite[]    @relation("InviteSender")
   fileGrants     CampaignFileGrant[]
   auditEvents    AuditEvent[]        @relation("AuditActor")
+  campaignThemes CampaignTheme[]     @relation("ThemeCreator")
+  themePresets   ThemePreset[]
 }
 
 model Campaign {
-  id          String     @id @default(cuid())
-  name        String
-  description String?
-  system      SystemType @default(CUSTOM)
-  coverImage  String?
-  isArchived  Boolean    @default(false)
-  archivedAt  DateTime?
-  ownerId     String
-  owner       User       @relation("CampaignOwner", fields: [ownerId], references: [id])
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  system        SystemType     @default(CUSTOM)
+  coverImage    String?
+  isArchived    Boolean        @default(false)
+  archivedAt    DateTime?
+  ownerId       String
+  owner         User           @relation("CampaignOwner", fields: [ownerId], references: [id])
+  activeThemeId String?        @unique
+  activeTheme   CampaignTheme? @relation("ActiveCampaignTheme", fields: [activeThemeId], references: [id], onDelete: SetNull)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   // Custom-system configuration (only populated when system = CUSTOM)
   attributes CampaignAttribute[]
@@ -170,7 +176,39 @@ model Campaign {
   investigationBoardGroups InvestigationBoardGroup[]
   investigationBoardViews  InvestigationBoardView[]
   briefing                 CampaignBriefing?
+  themes                   CampaignTheme[]           @relation("CampaignThemes")
 
+  @@index([ownerId])
+}
+
+model CampaignTheme {
+  id              String    @id @default(cuid())
+  campaignId      String
+  campaign        Campaign  @relation("CampaignThemes", fields: [campaignId], references: [id], onDelete: Cascade)
+  activeCampaign  Campaign? @relation("ActiveCampaignTheme")
+  createdById     String
+  createdBy       User      @relation("ThemeCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  name            String
+  draftConfig     Json
+  publishedConfig Json?
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([campaignId, updatedAt])
+  @@index([createdById])
+}
+
+model ThemePreset {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ownerId, name])
   @@index([ownerId])
 }
 
@@ -263,6 +301,8 @@ model CampaignFile {
   @@unique([campaignId, id], name: "CampaignFile_campaignId_id_key")
   @@index([campaignId, type])
   @@index([campaignId, isTrashed])
+  @@index([campaignId, isTrashed, isArchived, updatedAt])
+  @@index([campaignId, type, isTrashed, isArchived, updatedAt])
 }
 
 model Attachment {

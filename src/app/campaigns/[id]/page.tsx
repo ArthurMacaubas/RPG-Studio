@@ -6,12 +6,13 @@ import { CampaignHealthWidget } from '@/components/CampaignHealthWidget';
 import { Badge } from '@/components/ui/Badge';
 import { FileTypeIcon } from '@/components/fileTypeIcon';
 import { SYSTEM_LABELS, FILE_TYPE_LABELS } from '@/types';
+import { measureServer } from '@/lib/performance';
 import styles from './page.module.css';
 
 export default async function CampaignDashboardPage({ params }: { params: { id: string } }) {
   const access = await getCampaignAccess(params.id);
   if (access.role === 'PLAYER') redirect(`/campaigns/${params.id}/jogador`);
-  const dashboard = await campaignDashboardService.get(params.id);
+  const dashboard = await measureServer('page.campaign.dashboard', () => campaignDashboardService.get(params.id, access));
   if (!dashboard) notFound();
   const { campaign, role, user, fileCount, sessionCount, favoriteCount, recentFiles, favoriteFiles, byType, currentSession, health } = dashboard;
 
@@ -115,7 +116,7 @@ export default async function CampaignDashboardPage({ params }: { params: { id: 
             )}
           </div>
 
-          <CampaignHealthWidget campaignId={campaign.id} health={health} />
+          <CampaignHealthWidget campaignId={campaign.id} userId={user.id} health={health} />
         </div>
       </div>
     </main>

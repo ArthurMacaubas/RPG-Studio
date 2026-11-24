@@ -16,7 +16,7 @@ import type {
 import { Prisma } from '@prisma/client';
 import { assertCampaignRole } from '@/lib/access';
 
-const SYSTEM_TYPES: SystemType[] = ['ORDEM_PARANORMAL', 'DND_5E', 'CUSTOM'];
+const SYSTEM_TYPES: SystemType[] = ['ORDEM_PARANORMAL', 'DND_5E', 'THREEDET_VICTORY', 'CUSTOM'];
 const FILE_TYPES: FileType[] = [
   'CAMPAIGN',
   'NPC',
@@ -1008,7 +1008,7 @@ export async function importCampaign(ownerId: string, input: unknown, options: {
         ...(availableId(document.campaign.id, occupiedCampaign ? [occupiedCampaign] : []) ? { id: document.campaign.id } : {}),
         name: document.campaign.name,
         description: document.campaign.description,
-        system: document.campaign.system,
+      system: document.campaign.system as any,
         coverImage: document.campaign.coverImage,
         ownerId
       }

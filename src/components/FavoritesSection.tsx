@@ -4,17 +4,17 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Plus, Pencil, Trash2, ArrowUp, ArrowDown, Star } from 'lucide-react';
 import { favoriteFoldersApi } from '@/lib/api';
-import type { FavoriteFolder } from '@/types';
+import type { FavoriteFolderNavigation } from '@/types';
 import styles from './FavoritesSection.module.css';
 import sidebarStyles from './Sidebar.module.css';
 
 interface FavoritesSectionProps {
   campaignId: string;
-  initialFolders: FavoriteFolder[];
+  initialFolders: FavoriteFolderNavigation[];
 }
 
 export function FavoritesSection({ campaignId, initialFolders }: FavoritesSectionProps) {
-  const [folders, setFolders] = useState<FavoriteFolder[]>(initialFolders);
+  const [folders, setFolders] = useState<FavoriteFolderNavigation[]>(initialFolders);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -25,10 +25,7 @@ export function FavoritesSection({ campaignId, initialFolders }: FavoritesSectio
     setFolders(await favoriteFoldersApi.list(campaignId));
   }
 
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId]);
+  useEffect(() => setFolders(initialFolders), [campaignId, initialFolders]);
 
   async function createFolder() {
     if (!newName.trim()) {
@@ -49,7 +46,7 @@ export function FavoritesSection({ campaignId, initialFolders }: FavoritesSectio
     refresh();
   }
 
-  async function toggleCollapse(folder: FavoriteFolder) {
+  async function toggleCollapse(folder: FavoriteFolderNavigation) {
     await favoriteFoldersApi.update(folder.id, { isCollapsed: !folder.isCollapsed });
     refresh();
   }

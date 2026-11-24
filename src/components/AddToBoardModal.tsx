@@ -6,6 +6,7 @@ import { FileTypeIcon } from './fileTypeIcon';
 import { filesApi } from '@/lib/api';
 import type { CampaignFile } from '@/types';
 import { FILE_TYPE_LABELS } from '@/types';
+import { useDebounce } from '@/hooks/useDebounce';
 import fieldStyles from './formFields.module.css';
 import styles from './CustomSystemBuilder.module.css';
 
@@ -18,11 +19,18 @@ interface AddToBoardModalProps {
 
 export function AddToBoardModal({ campaignId, excludeFileIds, onClose, onPick }: AddToBoardModalProps) {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 220);
   const [files, setFiles] = useState<CampaignFile[]>([]);
 
   useEffect(() => {
-    filesApi.list(campaignId, { search: search || undefined, sort: 'name', direction: 'asc' }).then(setFiles);
-  }, [campaignId, search]);
+    let cancelled = false;
+    filesApi.list(campaignId, { search: debouncedSearch || undefined, sort: 'name', direction: 'asc' }).then((result) => {
+      if (!cancelled) setFiles(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [campaignId, debouncedSearch]);
 
   const visible = files.filter((f) => !excludeFileIds.includes(f.id));
 
