@@ -43,6 +43,7 @@ import type {
   CombatParticipant,
   PlayerCombatView
 } from '@/types';
+import type { CampaignThemeConfig } from '@/lib/campaignTheme';
 
 export interface PublicUser {
   id: string;
@@ -348,6 +349,45 @@ export const campaignsApi = {
   },
   create(input: { name: string; description?: string; system: Campaign['system'] }) {
     return request<Campaign>('/api/campaigns', { method: 'POST', body: JSON.stringify(input) });
+  }
+};
+
+export interface CampaignThemeRecord {
+  id: string;
+  campaignId: string;
+  createdById: string;
+  name: string;
+  draftConfig: CampaignThemeConfig;
+  publishedConfig: CampaignThemeConfig | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ThemePresetRecord {
+  id: string;
+  name: string;
+  official: boolean;
+  config: CampaignThemeConfig;
+}
+
+export const campaignThemesApi = {
+  list(campaignId: string) {
+    return request<{ activeThemeId: string | null; themes: CampaignThemeRecord[]; presets: ThemePresetRecord[] }>(`/api/campaigns/${campaignId}/themes`);
+  },
+  create(campaignId: string, input: { name: string; presetId?: string; config?: CampaignThemeConfig; action?: 'create' | 'import' }) {
+    return request<CampaignThemeRecord>(`/api/campaigns/${campaignId}/themes`, { method: 'POST', body: JSON.stringify(input) });
+  },
+  saveDraft(campaignId: string, themeId: string, input: { name?: string; config?: CampaignThemeConfig }) {
+    return request<CampaignThemeRecord>(`/api/campaigns/${campaignId}/themes/${themeId}`, { method: 'PATCH', body: JSON.stringify(input) });
+  },
+  action(campaignId: string, themeId: string, input: { action: 'publish' | 'apply' | 'restore' } | { action: 'duplicate' | 'savePreset'; name: string }) {
+    return request<CampaignThemeRecord | { activeThemeId: string }>(`/api/campaigns/${campaignId}/themes/${themeId}/actions`, { method: 'POST', body: JSON.stringify(input) });
+  },
+  uploadAsset(campaignId: string, file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    return request<{ url: string }>(`/api/campaigns/${campaignId}/themes/assets`, { method: 'POST', body: form });
   }
 };
 

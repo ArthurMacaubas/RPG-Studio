@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element -- temas aceitam data URLs validadas persistidas pela campanha. */
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -22,6 +23,7 @@ import {
   Trash2,
   Eye,
   Settings,
+  Palette,
   ArrowDownUp,
   BookMarked,
   Moon,
@@ -70,17 +72,21 @@ const UTILITY_ITEMS = [
   { href: '/convites', label: 'Convites / Membros', icon: Mail },
   { href: '/importar-exportar', label: 'Importar / Exportar', icon: ArrowDownUp },
   { href: '/documentacao-json', label: 'Template JSON', icon: BookMarked },
+  { href: '/configuracoes/aparencia', label: 'Aparência', icon: Palette },
   { href: '/configuracoes', label: 'Configurações', icon: Settings }
 ];
 
 interface SidebarProps {
   campaignId: string;
   campaignName?: string;
+  campaignSubtitle?: string;
+  logoUrl?: string;
+  symbolUrl?: string;
   role?: CampaignRole;
   favoriteFolders?: FavoriteFolder[];
 }
 
-export function Sidebar({ campaignId, campaignName, role, favoriteFolders = [] }: SidebarProps) {
+export function Sidebar({ campaignId, campaignName, campaignSubtitle, logoUrl, symbolUrl, role, favoriteFolders = [] }: SidebarProps) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -103,8 +109,11 @@ export function Sidebar({ campaignId, campaignName, role, favoriteFolders = [] }
       {mobileOpen && <button type="button" className={styles.mobileOverlay} onClick={closeMobile} aria-label="Fechar navegação" />}
       <aside className={`${styles.sidebar} ${mobileOpen ? styles.sidebarOpen : ''}`} aria-label="Navegação da campanha">
         <div className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true" />
-          <div className={styles.brandCopy}><span>RPG Campaign Studio</span><small>{campaignName ?? 'Campanha'}</small></div>
+          {symbolUrl ? <img className={styles.brandSymbol} src={symbolUrl} alt="" /> : <span className={styles.brandMark} aria-hidden="true" />}
+          <div className={styles.brandCopy}>
+            {logoUrl ? <img className={styles.brandLogo} src={logoUrl} alt={campaignName ?? 'Campanha'} /> : <span>RPG Campaign Studio</span>}
+            <small>{campaignSubtitle || campaignName || 'Campanha'}</small>
+          </div>
           <button type="button" className={styles.mobileClose} onClick={closeMobile} aria-label="Fechar navegação"><X size={18} /></button>
         </div>
 
