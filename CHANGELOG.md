@@ -6,6 +6,8 @@ Registro de alterações verificadas no histórico Git local. Não representa re
 
 ### Added
 
+- Grafo de Relações administrativo com filtros, auto-layout, posições locais, navegação, edição e exclusão usando o serviço oficial de relacionamentos.
+- Relatório técnico `docs/RELATIONSHIP_GRAPH_AND_COMPILER_V6.md`.
 - Temas por campanha com rascunho, publicação, aplicação, presets e validação.
 - Suporte ao 3DeT Victory, ficha adaptativa, rolagem e regra resumida.
 - Editor de documentos com leitura, edição visual, Markdown, sumário e links entre entidades.
@@ -15,12 +17,14 @@ Registro de alterações verificadas no histórico Git local. Não representa re
 
 ### Changed
 
+- Compilador V6 passou a iniciar recolhido no dashboard, carregar o diagnóstico sob demanda e persistir a preferência por usuário/campanha.
 - Shell da campanha e listas de arquivos passaram a aceitar carregamento inicial e consultas compatíveis paralelas.
 - Páginas e componentes receberam contenção responsiva.
 
 ### Fixed
 
 - Contenção do editor de documentos, controles compartilhados e grids em larguras menores.
+- Temas de campanha agora mantêm configurações independentes para os modos claro e escuro, incluindo compatibilidade com temas legados.
 
 ### Improved
 

@@ -43,10 +43,14 @@ export const campaignThemeService = {
     ]);
     return {
       activeThemeId: campaign?.activeThemeId ?? null,
-      themes,
+      themes: themes.map((theme) => ({
+        ...theme,
+        draftConfig: parseThemeConfig(theme.draftConfig),
+        publishedConfig: theme.publishedConfig ? parseThemeConfig(theme.publishedConfig) : null
+      })),
       presets: [
         ...OFFICIAL_THEME_PRESETS,
-        ...presets.map((preset) => ({ id: preset.id, name: preset.name, official: false, config: preset.config }))
+        ...presets.map((preset) => ({ id: preset.id, name: preset.name, official: false, config: parseThemeConfig(preset.config) }))
       ]
     };
   },
@@ -86,7 +90,7 @@ export const campaignThemeService = {
     const campaign = await assertOwnedCampaignForWrite(campaignId);
     const source = await ownedTheme(campaignId, themeId);
     const theme = await prisma.campaignTheme.create({
-      data: { campaignId, createdById: campaign.ownerId, name, draftConfig: source.draftConfig as Prisma.InputJsonValue }
+      data: { campaignId, createdById: campaign.ownerId, name, draftConfig: asJson(parseThemeConfig(source.draftConfig)) }
     });
     await prisma.auditEvent.create({ data: { campaignId, actorId: campaign.ownerId, action: 'theme.duplicated', entityType: 'CampaignTheme', entityId: theme.id, metadata: { sourceThemeId: themeId } } });
     return theme;

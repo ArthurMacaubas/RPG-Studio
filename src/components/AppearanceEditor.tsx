@@ -10,12 +10,13 @@ import {
   FONT_OPTIONS,
   campaignThemeConfigSchema,
   themeConfigToStyle,
+  type CampaignThemeMode,
   type CampaignThemeConfig
 } from '@/lib/campaignTheme';
 import { useToast } from '@/components/ui/ToastProvider';
 import styles from './AppearanceEditor.module.css';
 
-const COLOR_FIELDS: Array<[keyof CampaignThemeConfig['colors'], string]> = [
+const COLOR_FIELDS: Array<[keyof CampaignThemeConfig['modes']['dark']['colors'], string]> = [
   ['background', 'Fundo principal'], ['backgroundSecondary', 'Fundo secundário'], ['surface', 'Superfícies e cards'],
   ['primary', 'Cor primária'], ['secondary', 'Cor secundária'], ['accent', 'Destaque'], ['text', 'Texto principal'],
   ['textSecondary', 'Texto secundário'], ['border', 'Bordas'], ['links', 'Links'], ['complementary', 'Complementar']
@@ -29,9 +30,9 @@ function cloneConfig(config: CampaignThemeConfig) {
   return JSON.parse(JSON.stringify(config)) as CampaignThemeConfig;
 }
 
-function ThemePreview({ config, name }: { config: CampaignThemeConfig; name: string }) {
+function ThemePreview({ config, name, mode }: { config: CampaignThemeConfig; name: string; mode: CampaignThemeMode }) {
   return (
-    <div className={styles.preview} style={themeConfigToStyle(config)} data-texture={config.components.texture}>
+    <div className={styles.preview} style={themeConfigToStyle(config, mode)} data-texture={config.components.texture}>
       <div className={styles.previewBackdrop} />
       <aside className={styles.previewSidebar}>
         <div className={styles.previewBrand}>
@@ -58,6 +59,7 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
   const [activeThemeId, setActiveThemeId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [config, setConfig] = useState<CampaignThemeConfig>(() => cloneConfig(DEFAULT_CAMPAIGN_THEME));
+  const [activeMode, setActiveMode] = useState<CampaignThemeMode>('dark');
   const [themeName, setThemeName] = useState('Novo tema');
   const [newThemeName, setNewThemeName] = useState('O Sangue de Arashi');
   const [presetId, setPresetId] = useState('official-arashi');
@@ -71,6 +73,7 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
     setSelectedId(theme.id);
     setThemeName(theme.name);
     setConfig(cloneConfig(theme.draftConfig));
+    setActiveMode(theme.draftConfig.preferences.mode);
   }, []);
 
   const load = useCallback(async (preferredId?: string) => {
@@ -92,8 +95,11 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
     setConfig((current) => ({ ...current, identity: { ...current.identity, [key]: value } }));
   }
 
-  function patchColor(key: keyof CampaignThemeConfig['colors'], value: string) {
-    setConfig((current) => ({ ...current, colors: { ...current.colors, [key]: value } }));
+  function patchColor(key: keyof CampaignThemeConfig['modes']['dark']['colors'], value: string) {
+    setConfig((current) => ({
+      ...current,
+      modes: { ...current.modes, [activeMode]: { ...current.modes[activeMode], colors: { ...current.modes[activeMode].colors, [key]: value } } }
+    }));
   }
 
   function patchTypography<K extends keyof CampaignThemeConfig['typography']>(key: K, value: CampaignThemeConfig['typography'][K]) {
@@ -106,6 +112,10 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
 
   function patchPreferences<K extends keyof CampaignThemeConfig['preferences']>(key: K, value: CampaignThemeConfig['preferences'][K]) {
     setConfig((current) => ({ ...current, preferences: { ...current.preferences, [key]: value } }));
+  }
+
+  function patchMode<K extends keyof CampaignThemeConfig['modes']['dark']>(key: K, value: CampaignThemeConfig['modes']['dark'][K]) {
+    setConfig((current) => ({ ...current, modes: { ...current.modes, [activeMode]: { ...current.modes[activeMode], [key]: value } } }));
   }
 
   async function run(action: () => Promise<unknown>, success: string, preferredId?: string) {
@@ -208,7 +218,7 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
   }
 
   function exportTheme() {
-    const payload = JSON.stringify({ format: 'rpg-campaign-theme', version: 1, name: themeName, config }, null, 2);
+    const payload = JSON.stringify({ format: 'rpg-campaign-theme', version: 2, name: themeName, config }, null, 2);
     const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
     const anchor = document.createElement('a');
     anchor.href = url;
@@ -249,7 +259,7 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
         </div>
         {selectedPreset ? <div className={styles.presetPreview} aria-live="polite">
           <div className={styles.presetSwatches} aria-hidden="true">
-            {[selectedPreset.config.colors.background, selectedPreset.config.colors.surface, selectedPreset.config.colors.primary, selectedPreset.config.colors.accent].map((color) => <span key={color} style={{ background: color }} />)}
+            {[selectedPreset.config.modes.dark.colors.background, selectedPreset.config.modes.dark.colors.surface, selectedPreset.config.modes.dark.colors.primary, selectedPreset.config.modes.dark.colors.accent].map((color) => <span key={color} style={{ background: color }} />)}
           </div>
           <div><strong>{selectedPreset.name}</strong><small>{selectedPreset.description ?? 'Predefinição personalizada reutilizável'}</small></div>
           <span className={styles.presetPreviewHint}>A miniatura acompanha a seleção</span>
@@ -257,7 +267,7 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
         <div className={styles.themeList}>
           {themes.length === 0 ? <p className={styles.empty}>Crie o primeiro tema da campanha a partir de uma predefinição.</p> : themes.map((theme) => (
             <button key={theme.id} type="button" className={`${styles.themeItem} ${theme.id === selectedId ? styles.themeItemSelected : ''}`} onClick={() => selectTheme(theme)}>
-              <span className={styles.swatch} style={{ background: theme.draftConfig.colors.primary }} />
+              <span className={styles.swatch} style={{ background: theme.draftConfig.modes.dark.colors.primary }} />
               <span><strong>{theme.name}</strong><small>{theme.publishedConfig ? 'Publicado' : 'Somente rascunho'}{activeThemeId === theme.id ? ' · ativo' : ''}</small></span>
               {activeThemeId === theme.id ? <Check size={15} /> : null}
             </button>
@@ -290,8 +300,9 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
             </section>
 
             <section className={styles.controlPanel}>
-              <h3>Cores</h3>
-              <div className={styles.colorGrid}>{COLOR_FIELDS.map(([field, label]) => <label key={field} className={styles.colorField}><span>{label}</span><span><input type="color" value={config.colors[field]} onChange={(event) => patchColor(field, event.target.value.toUpperCase())} /><code>{config.colors[field]}</code></span></label>)}</div>
+              <div className={styles.modeHeading}><h3>Cores</h3><div className={styles.modeTabs} role="tablist" aria-label="Variante de cores"><button type="button" className={activeMode === 'dark' ? styles.modeTabActive : ''} onClick={() => setActiveMode('dark')} role="tab" aria-selected={activeMode === 'dark'}>Escuro</button><button type="button" className={activeMode === 'light' ? styles.modeTabActive : ''} onClick={() => setActiveMode('light')} role="tab" aria-selected={activeMode === 'light'}>Claro</button></div></div>
+              <p className={styles.modeHint}>Esta configuração é aplicada quando o usuário estiver no modo {activeMode === 'dark' ? 'escuro' : 'claro'}.</p>
+              <div className={styles.colorGrid}>{COLOR_FIELDS.map(([field, label]) => <label key={field} className={styles.colorField}><span>{label}</span><span><input type="color" value={config.modes[activeMode].colors[field]} onChange={(event) => patchColor(field, event.target.value.toUpperCase())} /><code>{config.modes[activeMode].colors[field]}</code></span></label>)}</div>
             </section>
 
             <section className={styles.controlPanel}>
@@ -321,21 +332,21 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
             <section className={styles.controlPanel}>
               <h3>Configurações adicionais</h3>
               <div className={styles.threeColumns}>
-                <label>Modo<select value={config.preferences.mode} onChange={(event) => patchPreferences('mode', event.target.value as 'dark' | 'light')}><option value="dark">Escuro</option><option value="light">Claro</option></select></label>
+                <label>Modo inicial<select value={config.preferences.mode} onChange={(event) => patchPreferences('mode', event.target.value as CampaignThemeMode)}><option value="dark">Escuro</option><option value="light">Claro</option></select></label>
                 <label>Posição do fundo<select value={config.preferences.backgroundPosition} onChange={(event) => patchPreferences('backgroundPosition', event.target.value as CampaignThemeConfig['preferences']['backgroundPosition'])}><option value="center">Centro</option><option value="top">Topo</option><option value="bottom">Base</option></select></label>
                 <label className={styles.checkboxLabel}><input type="checkbox" checked={config.preferences.decorativeElements} onChange={(event) => patchPreferences('decorativeElements', event.target.checked)} />Elementos decorativos</label>
               </div>
               <div className={styles.rangeGrid}>
-                <label className={styles.rangeLabel}><span>Opacidade do fundo <strong>{Math.round(config.preferences.backgroundOpacity * 100)}%</strong></span><input type="range" min="0" max="1" step="0.05" value={config.preferences.backgroundOpacity} onChange={(event) => patchPreferences('backgroundOpacity', Number(event.target.value))} /></label>
-                <label className={styles.rangeLabel}><span>Sobreposição <strong>{Math.round(config.preferences.imageOverlayOpacity * 100)}%</strong></span><input type="range" min="0" max="1" step="0.05" value={config.preferences.imageOverlayOpacity} onChange={(event) => patchPreferences('imageOverlayOpacity', Number(event.target.value))} /></label>
+                <label className={styles.rangeLabel}><span>Opacidade do fundo ({activeMode === 'dark' ? 'escuro' : 'claro'}) <strong>{Math.round(config.modes[activeMode].backgroundOpacity * 100)}%</strong></span><input type="range" min="0" max="1" step="0.05" value={config.modes[activeMode].backgroundOpacity} onChange={(event) => patchMode('backgroundOpacity', Number(event.target.value))} /></label>
+                <label className={styles.rangeLabel}><span>Sobreposição ({activeMode === 'dark' ? 'escuro' : 'claro'}) <strong>{Math.round(config.modes[activeMode].imageOverlayOpacity * 100)}%</strong></span><input type="range" min="0" max="1" step="0.05" value={config.modes[activeMode].imageOverlayOpacity} onChange={(event) => patchMode('imageOverlayOpacity', Number(event.target.value))} /></label>
               </div>
-              <label className={styles.overlayColor}>Cor da sobreposição<input type="color" value={config.preferences.imageOverlay} onChange={(event) => patchPreferences('imageOverlay', event.target.value.toUpperCase())} /><code>{config.preferences.imageOverlay}</code></label>
+              <label className={styles.overlayColor}>Cor da sobreposição ({activeMode === 'dark' ? 'escuro' : 'claro'})<input type="color" value={config.modes[activeMode].imageOverlay} onChange={(event) => patchMode('imageOverlay', event.target.value.toUpperCase())} /><code>{config.modes[activeMode].imageOverlay}</code></label>
             </section>
           </div>
 
           <aside className={styles.previewColumn}>
             <div className={styles.previewHeading}><span><Eye size={15} /> Pré-visualização em tempo real</span><small>Isolada do tema publicado</small></div>
-            <ThemePreview config={config} name={themeName} />
+            <ThemePreview config={config} name={themeName} mode={activeMode} />
             <div className={styles.publishActions}>
               <button type="button" className={styles.secondaryButton} onClick={() => void themeAction('restore')} disabled={busy}><RotateCcw size={14} />Restaurar padrão</button>
               <button type="button" className={styles.secondaryButton} onClick={() => void namedAction('savePreset')} disabled={busy}><Sparkles size={14} />Salvar predefinição</button>

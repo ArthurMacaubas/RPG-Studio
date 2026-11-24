@@ -11,6 +11,7 @@ import type {
   RelationshipKind,
   RelationshipType,
   RelationshipVisibility,
+  RelationshipGraphData,
   CampaignDetail,
   CampaignAttributeDef,
   CampaignSkillDef,
@@ -545,7 +546,7 @@ export const relationshipsApi = {
   },
   graph(campaignId: string, fileIds?: string[]) {
     const query = fileIds ? `?fileIds=${encodeURIComponent([...new Set(fileIds)].join(','))}` : '';
-    return request<{ nodes: Array<{ id: string; name: string; type: FileType }>; edges: Array<{ id: string; sourceId: string; targetId: string; type: RelationshipType; label: string | null; description: string | null; importance: RelationshipImportance; visibility: RelationshipVisibility }> }>(`/api/campaigns/${campaignId}/relationships/graph${query}`);
+    return request<RelationshipGraphData>(`/api/campaigns/${campaignId}/relationships/graph${query}`);
   },
   create(input: { fromId: string; toId: string; typeId?: string; typeKey?: string; kind?: RelationshipKind; label?: string; description?: string; importance?: RelationshipImportance; visibility?: RelationshipVisibility }) {
     return request<Relationship>(`/api/relationships`, { method: 'POST', body: JSON.stringify(input) });

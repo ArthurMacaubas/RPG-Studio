@@ -120,6 +120,28 @@ export interface RelationshipType {
   updatedAt: string;
 }
 
+export interface RelationshipGraphNode {
+  id: string;
+  name: string;
+  type: FileType;
+}
+
+export interface RelationshipGraphEdge {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  type: RelationshipType;
+  label: string | null;
+  description: string | null;
+  importance: RelationshipImportance;
+  visibility: RelationshipVisibility;
+}
+
+export interface RelationshipGraphData {
+  nodes: RelationshipGraphNode[];
+  edges: RelationshipGraphEdge[];
+}
+
 export interface FavoriteFolder {
   id: string;
   campaignId: string;

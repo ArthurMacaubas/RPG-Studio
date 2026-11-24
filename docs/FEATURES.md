@@ -11,7 +11,7 @@
 | Combate e sala de sessão | Completa | `combatService`, `sessionPlanningService` | integração visual exige validação manual |
 | Timeline e briefing | Completa | serviços e rotas de timeline/briefing | conteúdo é fornecido pelo usuário |
 | Quadro de investigação | Completa | `boardService`, pins, grupos e views | quadro visual é separado do grafo oficial |
-| Relações e compilador | Completa | `relationshipService`, health/simulate | hipóteses e relações têm modelos distintos |
+| Relações e compilador | Completa | `relationshipService`, `/grafo`, health/simulate | grafo oficial e Quadro de Investigação continuam separados; V6 é recolhível |
 | Modo jogador | Completa | `publicationPolicy`, grants e share slug | filtro deve permanecer server-side |
 | Import/export | Completa | `campaignTransferService` | uploads grandes continuam externos |
 | Autenticação e convites | Completa | `auth`, `access`, rotas `/auth` | sessões e rate limit dependem da operação |

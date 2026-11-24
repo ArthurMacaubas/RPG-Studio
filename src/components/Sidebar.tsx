@@ -56,6 +56,7 @@ const NAV_ITEMS = [
 
 const INVESTIGATION_ITEMS = [
   { href: '/investigacao', label: 'Quadro de Investigação', icon: Network },
+  { href: '/grafo', label: 'Grafo de Relações', icon: Network },
   { href: '/timeline', label: 'Timeline', icon: ChevronRight },
   { href: '/mapa', label: 'Mapas', icon: Map }
 ];

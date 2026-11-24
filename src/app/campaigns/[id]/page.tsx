@@ -116,7 +116,7 @@ export default async function CampaignDashboardPage({ params }: { params: { id: 
             )}
           </div>
 
-          <CampaignHealthWidget campaignId={campaign.id} health={health} />
+          <CampaignHealthWidget campaignId={campaign.id} userId={user.id} health={health} />
         </div>
       </div>
     </main>

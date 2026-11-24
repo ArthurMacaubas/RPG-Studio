@@ -32,7 +32,7 @@ export default async function CampaignLayout({
       data-theme-decorations={publishedTheme?.config.preferences.decorativeElements ? 'on' : 'off'}
       style={publishedTheme ? themeConfigToStyle(publishedTheme.config) : undefined}
     >
-      <CampaignThemeRuntime faviconUrl={publishedTheme?.config.identity.faviconUrl} />
+      {publishedTheme ? <CampaignThemeRuntime config={publishedTheme.config} faviconUrl={publishedTheme.config.identity.faviconUrl} /> : null}
       <Sidebar
         campaignId={campaign.id}
         campaignName={campaign.name}
