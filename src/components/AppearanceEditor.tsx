@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- a prévia usa imagens validadas e persistidas no tema. */
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { Check, Copy, Download, Eye, ImagePlus, Palette, RotateCcw, Save, Sparkles, Upload } from 'lucide-react';
 import { campaignThemesApi, type CampaignThemeRecord, type ThemePresetRecord } from '@/lib/api';
 import {
@@ -64,6 +65,7 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
   const [loading, setLoading] = useState(true);
   const importRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const selectTheme = useCallback((theme: CampaignThemeRecord) => {
     setSelectedId(theme.id);
@@ -113,8 +115,10 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
       const resultId = typeof result === 'object' && result && 'id' in result ? String(result.id) : preferredId;
       await load(resultId);
       toast({ tone: 'success', title: success });
+      return true;
     } catch (error) {
       toast({ tone: 'error', title: 'Não foi possível concluir', message: error instanceof Error ? error.message : 'Tente novamente.' });
+      return false;
     } finally {
       setBusy(false);
     }
@@ -131,16 +135,52 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
     const parsed = campaignThemeConfigSchema.safeParse(config);
     if (!parsed.success) {
       toast({ tone: 'error', title: 'Revise o tema', message: parsed.error.issues[0]?.message });
-      return;
+      return false;
     }
-    await run(() => campaignThemesApi.saveDraft(campaignId, selectedId, { name: themeName.trim(), config: parsed.data }), 'Rascunho salvo', selectedId);
+    return run(() => campaignThemesApi.saveDraft(campaignId, selectedId, { name: themeName.trim(), config: parsed.data }), 'Rascunho salvo', selectedId);
   }
 
   async function themeAction(action: 'publish' | 'apply' | 'restore') {
     if (!selectedId) return;
     if (action === 'restore' && !window.confirm('Restaurar o rascunho para a identidade padrão do RPG Studio?')) return;
+    if (action === 'publish') {
+      const parsed = campaignThemeConfigSchema.safeParse(config);
+      if (!parsed.success) {
+        toast({ tone: 'error', title: 'Revise o tema', message: parsed.error.issues[0]?.message });
+        return;
+      }
+      const published = await run(async () => {
+        await campaignThemesApi.saveDraft(campaignId, selectedId, { name: themeName.trim(), config: parsed.data });
+        return campaignThemesApi.action(campaignId, selectedId, { action: 'publish' });
+      }, 'Tema publicado', selectedId);
+      if (published) router.refresh();
+      return;
+    }
     const labels = { publish: 'Tema publicado', apply: 'Tema aplicado à campanha', restore: 'Padrão restaurado no rascunho' };
-    await run(() => campaignThemesApi.action(campaignId, selectedId, { action }), labels[action], selectedId);
+    const succeeded = await run(() => campaignThemesApi.action(campaignId, selectedId, { action }), labels[action], selectedId);
+    if (succeeded && action === 'apply') router.refresh();
+  }
+
+  async function publishAndApply() {
+    if (!selectedId) return;
+    const parsed = campaignThemeConfigSchema.safeParse(config);
+    if (!parsed.success) {
+      toast({ tone: 'error', title: 'Revise o tema', message: parsed.error.issues[0]?.message });
+      return;
+    }
+    setBusy(true);
+    try {
+      await campaignThemesApi.saveDraft(campaignId, selectedId, { name: themeName.trim(), config: parsed.data });
+      await campaignThemesApi.action(campaignId, selectedId, { action: 'publish' });
+      await campaignThemesApi.action(campaignId, selectedId, { action: 'apply' });
+      await load(selectedId);
+      router.refresh();
+      toast({ tone: 'success', title: 'Tema publicado e aplicado', message: 'A aparência da campanha foi atualizada.' });
+    } catch (error) {
+      toast({ tone: 'error', title: 'Não foi possível aplicar o tema', message: error instanceof Error ? error.message : 'Tente novamente.' });
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function namedAction(action: 'duplicate' | 'savePreset') {
@@ -192,6 +232,7 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
   }
 
   const selectedTheme = themes.find((theme) => theme.id === selectedId);
+  const selectedPreset = presets.find((preset) => preset.id === presetId);
   if (loading) return <div className={styles.loading}>Carregando editor de aparência…</div>;
 
   return (
@@ -204,8 +245,15 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
             <option value="">Padrão do Studio</option>
             {presets.map((preset) => <option key={preset.id} value={preset.id}>{preset.official ? 'Oficial · ' : ''}{preset.name}</option>)}
           </select>
-          <button type="button" onClick={() => void createTheme()} disabled={busy || !newThemeName.trim()}><Sparkles size={14} />Criar tema</button>
+          <button type="button" onClick={() => void createTheme()} disabled={busy || !newThemeName.trim()}><Sparkles size={14} />Criar e aplicar na campanha</button>
         </div>
+        {selectedPreset ? <div className={styles.presetPreview} aria-live="polite">
+          <div className={styles.presetSwatches} aria-hidden="true">
+            {[selectedPreset.config.colors.background, selectedPreset.config.colors.surface, selectedPreset.config.colors.primary, selectedPreset.config.colors.accent].map((color) => <span key={color} style={{ background: color }} />)}
+          </div>
+          <div><strong>{selectedPreset.name}</strong><small>{selectedPreset.description ?? 'Predefinição personalizada reutilizável'}</small></div>
+          <span className={styles.presetPreviewHint}>A miniatura acompanha a seleção</span>
+        </div> : null}
         <div className={styles.themeList}>
           {themes.length === 0 ? <p className={styles.empty}>Crie o primeiro tema da campanha a partir de uma predefinição.</p> : themes.map((theme) => (
             <button key={theme.id} type="button" className={`${styles.themeItem} ${theme.id === selectedId ? styles.themeItemSelected : ''}`} onClick={() => selectTheme(theme)}>
@@ -293,7 +341,7 @@ export function AppearanceEditor({ campaignId }: { campaignId: string }) {
               <button type="button" className={styles.secondaryButton} onClick={() => void namedAction('savePreset')} disabled={busy}><Sparkles size={14} />Salvar predefinição</button>
               <button type="button" className={styles.saveButton} onClick={() => void saveDraft()} disabled={busy || !themeName.trim()}><Save size={14} />Salvar rascunho</button>
               <button type="button" className={styles.publishButton} onClick={() => void themeAction('publish')} disabled={busy}><Upload size={14} />Publicar</button>
-              <button type="button" className={styles.applyButton} onClick={() => void themeAction('apply')} disabled={busy || !selectedTheme.publishedConfig}><Check size={14} />Aplicar à campanha</button>
+              <button type="button" className={styles.applyButton} onClick={() => void publishAndApply()} disabled={busy || !themeName.trim()}><Check size={14} />Salvar, publicar e aplicar</button>
             </div>
             <p className={styles.safetyNote}>Publicar atualiza a versão visível disponível. Aplicar define este tema como ativo; rascunhos nunca são exibidos aos jogadores.</p>
           </aside>

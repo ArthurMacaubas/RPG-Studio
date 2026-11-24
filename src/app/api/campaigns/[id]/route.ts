@@ -7,6 +7,7 @@ const updateSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   description: z.string().max(2000).optional(),
   coverImage: z.string().url().optional(),
+  system: z.enum(['ORDEM_PARANORMAL', 'DND_5E', 'THREEDET_VICTORY', 'CUSTOM']).optional(),
   isArchived: z.boolean().optional()
 });
 

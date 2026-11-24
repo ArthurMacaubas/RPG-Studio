@@ -65,6 +65,8 @@ const PLAYER_NAV_ITEMS = [
   { href: '/jogador/investigacao', label: 'Quadro compartilhado', icon: Network }
 ];
 
+const RULEBOOK_ITEM = { href: '/regras', label: 'Compêndio de regras', icon: BookMarked };
+
 const UTILITY_ITEMS = [
   { href: '/arquivados', label: 'Arquivados', icon: Archive },
   { href: '/lixeira', label: 'Lixeira', icon: Trash2 },
@@ -125,6 +127,11 @@ export function Sidebar({ campaignId, campaignName, campaignSubtitle, logoUrl, s
             const Icon = item.icon;
             return <Link key={item.label} href={`${base}${item.href}` as never} className={`${styles.navItem} ${isActive(item.href) ? styles.navItemActive : ''}`} onClick={closeMobile}><Icon />{item.label}</Link>;
           })}
+        </nav>
+
+        <nav className={styles.section}>
+          <div className={styles.sectionLabel}>Referência</div>
+          <Link href={`${base}${RULEBOOK_ITEM.href}` as never} className={`${styles.navItem} ${isActive(RULEBOOK_ITEM.href) ? styles.navItemActive : ''}`} onClick={closeMobile}><RULEBOOK_ITEM.icon />{RULEBOOK_ITEM.label}</Link>
         </nav>
 
         {role !== 'PLAYER' && <FavoritesSection campaignId={campaignId} initialFolders={favoriteFolders} />}

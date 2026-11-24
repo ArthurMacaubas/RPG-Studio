@@ -22,4 +22,5 @@ describe('campaign theme configuration', () => {
     expect(CYBERPUNK_THEME.colors.primary).toBe('#00B8C8');
     expect(themeConfigToStyle(MEDIEVAL_FANTASY_THEME)['--color-background']).not.toBe(themeConfigToStyle(CYBERPUNK_THEME)['--color-background']);
   });
+
 });

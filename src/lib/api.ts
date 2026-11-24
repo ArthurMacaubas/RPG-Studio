@@ -119,8 +119,9 @@ export const invitesApi = {
     const response = await request<{ invites: ReceivedInvite[] }>('/api/invites');
     return response.invites ?? [];
   },
-  preview(token: string) {
-    return request<InvitePreview>(`/api/invites/${encodeURIComponent(token)}`);
+  async preview(token: string) {
+    const response = await request<{ invite: InvitePreview }>(`/api/invites/${encodeURIComponent(token)}`);
+    return response.invite;
   },
   accept(token: string) {
     return request<{ member: { id: string; role: 'PLAYER' }; campaign: InvitePreview['campaign'] }>(`/api/invites/${encodeURIComponent(token)}/accept`, { method: 'POST' });
@@ -349,6 +350,9 @@ export const campaignsApi = {
   },
   create(input: { name: string; description?: string; system: Campaign['system'] }) {
     return request<Campaign>('/api/campaigns', { method: 'POST', body: JSON.stringify(input) });
+  },
+  update(id: string, input: { name?: string; description?: string; coverImage?: string; isArchived?: boolean; system?: Campaign['system'] }) {
+    return request<Campaign>(`/api/campaigns/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
   }
 };
 
@@ -367,6 +371,7 @@ export interface CampaignThemeRecord {
 export interface ThemePresetRecord {
   id: string;
   name: string;
+  description?: string;
   official: boolean;
   config: CampaignThemeConfig;
 }

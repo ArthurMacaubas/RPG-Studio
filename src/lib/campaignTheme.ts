@@ -7,7 +7,10 @@ const imageValue = z.string().max(850_000).refine(
   'Use uma imagem enviada pelo editor ou um caminho interno seguro.'
 );
 
-export const FONT_OPTIONS = ['Inter', 'Cinzel', 'Noto Serif JP', 'Space Grotesk', 'Georgia', 'System'] as const;
+export const FONT_OPTIONS = [
+  'Inter', 'Cinzel', 'Noto Serif JP', 'Space Grotesk', 'Cormorant Garamond', 'Source Serif 4',
+  'Rajdhani', 'JetBrains Mono', 'Georgia', 'System'
+] as const;
 
 export const campaignThemeConfigSchema = z.object({
   version: z.literal(1),
@@ -116,6 +119,10 @@ const FONT_STACKS: Record<(typeof FONT_OPTIONS)[number], string> = {
   Cinzel: "'Cinzel', 'Times New Roman', serif",
   'Noto Serif JP': "'Noto Serif JP', 'Yu Mincho', serif",
   'Space Grotesk': "'Space Grotesk', 'Inter', sans-serif",
+  'Cormorant Garamond': "'Cormorant Garamond', Georgia, serif",
+  'Source Serif 4': "'Source Serif 4', Georgia, serif",
+  Rajdhani: "'Rajdhani', 'Arial Narrow', sans-serif",
+  'JetBrains Mono': "'JetBrains Mono', ui-monospace, monospace",
   Georgia: "Georgia, 'Times New Roman', serif",
   System: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 };

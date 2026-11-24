@@ -18,6 +18,7 @@ datasource db {
 enum SystemType {
   ORDEM_PARANORMAL
   DND_5E
+  THREEDET_VICTORY
   CUSTOM
 }
 
