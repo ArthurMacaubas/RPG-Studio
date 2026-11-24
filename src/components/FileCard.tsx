@@ -21,6 +21,14 @@ export function FileCard({ file, selected, onOpen, onSelectToggle, onToggleFavor
     <div
       className={`${styles.card} ${selected ? styles.cardSelected : ''}`}
       onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+        e.preventDefault();
+        onOpen();
+      }}
+      role="link"
+      tabIndex={0}
+      aria-label={`Abrir arquivo ${file.name}`}
       onContextMenu={(e) => {
         e.preventDefault();
         onContextMenu(e);
@@ -64,8 +72,8 @@ export function FileCard({ file, selected, onOpen, onSelectToggle, onToggleFavor
       </div>
 
       <div>
-        <div className={styles.name}>{file.name}</div>
-        {file.description && <div className={styles.description}>{file.description}</div>}
+        <div className={styles.name} title={file.name}>{file.name}</div>
+        {file.description && <div className={styles.description} title={file.description}>{file.description}</div>}
       </div>
 
       <div className={styles.footer}>
