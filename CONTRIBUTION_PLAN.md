@@ -14,7 +14,7 @@
 
 | Branch | Categoria | Escopo | Dependência | Validação | Status | Prioridade | Comparação |
 |---|---|---|---|---|---|---|---|
-| `feat/campaign-themes` | feature | temas genéricos por campanha, rascunho/publicação/presets | upstream/main | validate, format, types, lint, 302 tests e build passaram | pronta para revisão | alta | não verificável enquanto local |
+| `feat/campaign-themes` | feature | temas genéricos por campanha, rascunho/publicação/presets | upstream/main | validate, format, types, lint, tests e build passaram | pronta para revisão | alta | não verificável enquanto local |
 | `feat/three-det-victory` | feature | sistema genérico 3DeT Victory | `feat/campaign-themes` | validate, format, types, lint, tests e build passaram | pronta após temas | alta | não verificável enquanto local |
 | `feat/document-editor` | feature | editor de enciclopédia e Markdown | `feat/three-det-victory` por cadeia histórica | validate, format, types, lint, tests e build passaram | pronta após 3DeT | média | não verificável enquanto local |
 | `perf/rpg-studio-data-loading` | performance | consultas, lazy loading, índices e telemetria | `feat/document-editor` | validate, format, types, lint, tests e build passaram | pronta após editor | alta | não verificável enquanto local |
