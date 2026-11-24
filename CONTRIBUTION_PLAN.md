@@ -14,12 +14,12 @@
 
 | Branch | Categoria | Escopo | Dependência | Validação | Status | Prioridade | Comparação |
 |---|---|---|---|---|---|---|---|
-| `feat/campaign-themes` | feature | temas genéricos por campanha, rascunho/publicação/presets | upstream/main | pendente nesta auditoria | pronta para revisão | alta | não verificável enquanto local |
-| `feat/three-det-victory` | feature | sistema genérico 3DeT Victory | `feat/campaign-themes` | pendente nesta auditoria | pronta após temas | alta | não verificável enquanto local |
-| `feat/document-editor` | feature | editor de enciclopédia e Markdown | `feat/three-det-victory` por cadeia histórica | pendente nesta auditoria | pronta após 3DeT | média | não verificável enquanto local |
-| `perf/rpg-studio-data-loading` | performance | consultas, lazy loading, índices e telemetria | `feat/document-editor` | pendente nesta auditoria | pronta após editor | alta | não verificável enquanto local |
-| `perf/file-explorer-server-render` | performance | dados iniciais server-rendered dos exploradores | `perf/rpg-studio-data-loading` | pendente nesta auditoria | pronta após performance | média | não verificável enquanto local |
-| `fix/responsive-layout` | fix | shell, grids, editor e controles responsivos | `perf/file-explorer-server-render` | pendente nesta auditoria | pronta após cadeia | média | não verificável enquanto local |
+| `feat/campaign-themes` | feature | temas genéricos por campanha, rascunho/publicação/presets | upstream/main | validate, format, types, lint, 302 tests e build passaram | pronta para revisão | alta | não verificável enquanto local |
+| `feat/three-det-victory` | feature | sistema genérico 3DeT Victory | `feat/campaign-themes` | validate, format, types, lint, tests e build passaram | pronta após temas | alta | não verificável enquanto local |
+| `feat/document-editor` | feature | editor de enciclopédia e Markdown | `feat/three-det-victory` por cadeia histórica | validate, format, types, lint, tests e build passaram | pronta após 3DeT | média | não verificável enquanto local |
+| `perf/rpg-studio-data-loading` | performance | consultas, lazy loading, índices e telemetria | `feat/document-editor` | validate, format, types, lint, tests e build passaram | pronta após editor | alta | não verificável enquanto local |
+| `perf/file-explorer-server-render` | performance | dados iniciais server-rendered dos exploradores | `perf/rpg-studio-data-loading` | validate, format, types, lint, tests e build passaram | pronta após performance | média | não verificável enquanto local |
+| `fix/responsive-layout` | fix | shell, grids, editor e controles responsivos | `perf/file-explorer-server-render` | não executada após interrupção da matriz; build pendente | aguarda validação | média | não verificável enquanto local |
 
 As branches foram reconstruídas com patches finais limpos. O preset e a identidade de O Sangue de Arashi não aparecem nelas. A branch principal da fork preserva todas as personalizações existentes.
 
@@ -175,3 +175,7 @@ O Sangue de Arashi, its narrative, visual identity, preset, names, documents, se
 - Review the public history risk before publishing any branch.
 - Run isolated PostgreSQL migrations and integration tests.
 - Perform authenticated browser checks for themes, 3DeT, editor and responsive layouts.
+
+## Evidência desta auditoria
+
+No `main`, `prisma:format`, TypeScript, lint, 302 testes em 52 arquivos e build passaram. `prisma:validate` inicialmente não pôde carregar sem `DATABASE_URL_UNPOOLED`; o schema foi validado nas branches preparadas com URLs locais fictícias, sem conexão ao banco. Nenhuma migration, smoke test ou teste PostgreSQL foi executado.
