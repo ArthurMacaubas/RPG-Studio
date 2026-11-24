@@ -7,14 +7,18 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { DiceRoller } from '@/components/ui/DiceRoller';
+import { ThreeDetRoller } from '@/components/ui/ThreeDetRoller';
 import {
   ORDEM_PARANORMAL_ATTRIBUTES,
   ORDEM_PARANORMAL_SKILLS,
   DND5E_ATTRIBUTES,
   DND5E_SKILLS,
+  THREEDET_VICTORY_ATTRIBUTES,
+  THREEDET_VICTORY_SKILLS,
   type SheetAttribute,
   type SheetSkill
 } from '@/lib/systemPresets';
+import { calculateThreeDetBuild, calculateThreeDetDamage, calculateThreeDetResources, rollThreeDetTest, THREEDET_DEFAULT_BUDGET, THREEDET_DEFAULT_DISADVANTAGE_LIMIT } from '@/lib/threeDetVictory';
 import type { CampaignClassDef, CampaignRaceDef, SheetAbilityItem, SheetData, SheetInventoryItem, SystemType } from '@/types';
 import { SYSTEM_LABELS } from '@/types';
 import styles from './CharacterSheet.module.css';
@@ -46,6 +50,8 @@ export function CharacterSheet({ campaignId, system, data, onChange, variant = '
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [newAbility, setNewAbility] = useState('');
   const [newItem, setNewItem] = useState('');
+  const [threeDetDefenseTarget, setThreeDetDefenseTarget] = useState(0);
+  const [threeDetCombatResult, setThreeDetCombatResult] = useState<string | null>(null);
 
   useEffect(() => {
     setActiveTab('overview');
@@ -59,6 +65,13 @@ export function CharacterSheet({ campaignId, system, data, onChange, variant = '
     if (system === 'DND_5E') {
       setAttributes(DND5E_ATTRIBUTES);
       setSkills(DND5E_SKILLS);
+      setClasses([]);
+      setRaces([]);
+      return;
+    }
+    if (system === 'THREEDET_VICTORY') {
+      setAttributes(THREEDET_VICTORY_ATTRIBUTES);
+      setSkills(THREEDET_VICTORY_SKILLS);
       setClasses([]);
       setRaces([]);
       return;
@@ -81,19 +94,45 @@ export function CharacterSheet({ campaignId, system, data, onChange, variant = '
     });
   }, [campaignId, system]);
 
-  const themeClass = system === 'ORDEM_PARANORMAL' ? styles.themeOrdem : system === 'DND_5E' ? styles.themeDnd : styles.themeCustom;
+  const themeClass = system === 'ORDEM_PARANORMAL' ? styles.themeOrdem : system === 'DND_5E' ? styles.themeDnd : system === 'THREEDET_VICTORY' ? styles.themeCustom : styles.themeCustom;
   const isOrdem = system === 'ORDEM_PARANORMAL';
   const isDnd = system === 'DND_5E';
+  const isThreeDet = system === 'THREEDET_VICTORY';
   const isThreat = variant === 'THREAT';
   const visibleSkills = showAllSkills ? skills : skills.slice(0, 12);
   const coreAttributes = useMemo(() => isOrdem ? attributes.filter((attr) => ['forca', 'agilidade', 'intelecto', 'vigor', 'presenca'].includes(attr.id)) : isDnd ? attributes.filter((attr) => ['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(attr.id)) : attributes, [attributes, isDnd, isOrdem]);
+  const threeDetAttributes = { poder: data.attributes?.poder ?? 0, habilidade: data.attributes?.habilidade ?? 0, resistencia: data.attributes?.resistencia ?? 0 };
+  const threeDetResources = calculateThreeDetResources(threeDetAttributes, data.threeDet?.resourceModifiers, data.threeDet?.resources ? { pa: data.threeDet.resources.pa?.current, pm: data.threeDet.resources.pm?.current, pv: data.threeDet.resources.pv?.current } : undefined);
+  const threeDetBuild = calculateThreeDetBuild({ attributes: threeDetAttributes, skills: data.skills, advantages: data.threeDet?.build?.advantages, disadvantages: data.threeDet?.build?.disadvantages, archetypes: data.threeDet?.build?.archetypes, budget: data.threeDet?.build?.budget, disadvantageLimit: data.threeDet?.build?.disadvantageLimit });
 
   function patch(patchData: Partial<SheetData>) {
     onChange({ ...data, ...patchData });
   }
 
   function setAttrValue(attrId: string, value: number) {
+    if (isThreeDet) {
+      const nextAttributes = { ...data.attributes, [attrId]: value };
+      const next = calculateThreeDetResources({ poder: nextAttributes.poder, habilidade: nextAttributes.habilidade, resistencia: nextAttributes.resistencia }, data.threeDet?.resourceModifiers, data.threeDet?.resources ? { pa: data.threeDet.resources.pa?.current, pm: data.threeDet.resources.pm?.current, pv: data.threeDet.resources.pv?.current } : undefined);
+      patch({ attributes: nextAttributes, threeDet: { ...data.threeDet, resources: next } });
+      return;
+    }
     patch({ attributes: { ...data.attributes, [attrId]: value } });
+  }
+
+  function setThreeDetResource(key: 'pa' | 'pm' | 'pv', field: 'current' | 'max', value: number) {
+    const current = data.threeDet?.resources ?? threeDetResources;
+    patch({ threeDet: { ...data.threeDet, resources: { ...threeDetResources, ...current, [key]: { ...current[key], [field]: value } } } });
+  }
+
+  function setThreeDetBuild(patchBuild: Partial<NonNullable<NonNullable<SheetData['threeDet']>['build']>>) {
+    patch({ threeDet: { ...data.threeDet, build: { budget: THREEDET_DEFAULT_BUDGET, disadvantageLimit: THREEDET_DEFAULT_DISADVANTAGE_LIMIT, advantages: [], disadvantages: [], archetypes: [], xp: 0, xpSpent: 0, ...data.threeDet?.build, ...patchBuild } } });
+  }
+
+  function rollThreeDetAttack() {
+    const attack = rollThreeDetTest({ attribute: threeDetAttributes.poder, hasSkill: Boolean(data.skills?.luta) });
+    const defense = threeDetDefenseTarget || threeDetAttributes.resistencia;
+    const damage = calculateThreeDetDamage(attack.total, defense);
+    setThreeDetCombatResult(`Ataque ${attack.total} · defesa ${defense} · dano ${damage}${attack.criticalFailure ? ' · falha crítica' : ''}`);
   }
 
   function setVital(key: 'current' | 'max' | 'secondaryCurrent' | 'secondaryMax', value: number) {
@@ -190,8 +229,9 @@ export function CharacterSheet({ campaignId, system, data, onChange, variant = '
           <label className={styles.field}><span>{isThreat ? 'Arquétipo ou subtipo' : 'Nome do personagem'}</span><input value={data.concept ?? ''} onChange={(event) => patch({ concept: event.target.value })} placeholder={isThreat ? 'Ex.: criatura aberrante, cultista veterano' : isOrdem ? 'Nome do agente' : isDnd ? 'Nome do aventureiro' : 'Nome ou conceito'} /></label>
           {!isThreat && <label className={styles.field}><span>Jogador</span><input value={data.playerName ?? ''} onChange={(event) => patch({ playerName: event.target.value })} placeholder="Nome do jogador" /></label>}
           {!isThreat && <label className={styles.field}><span>Pronomes</span><input value={data.pronouns ?? ''} onChange={(event) => patch({ pronouns: event.target.value })} placeholder="Ex.: ela/dela" /></label>}
-          <label className={styles.field}><span>{isOrdem ? 'Origem' : isDnd ? 'Antecedente' : 'Contexto'}</span><input value={data.background ?? ''} onChange={(event) => patch({ background: event.target.value })} placeholder={isOrdem ? 'Ex.: Operário, Universitário' : isDnd ? 'Ex.: Criminoso, Herói do povo' : 'Defina o contexto'} /></label>
-          <label className={styles.field}><span>{isOrdem ? 'NEX' : 'Nível'}</span><input type="number" min={1} value={data.level ?? 1} onChange={(event) => patch({ level: Number(event.target.value) })} /></label>
+          <label className={styles.field}><span>{isOrdem ? 'Origem' : isDnd ? 'Antecedente' : isThreeDet ? 'Origem' : 'Contexto'}</span><input value={data.background ?? ''} onChange={(event) => patch({ background: event.target.value })} placeholder={isOrdem ? 'Ex.: Operário, Universitário' : isDnd ? 'Ex.: Criminoso, Herói do povo' : isThreeDet ? 'Origem do personagem' : 'Defina o contexto'} /></label>
+          {!isThreat && !isThreeDet && <label className={styles.field}><span>{isOrdem ? 'NEX' : 'Nível'}</span><input type="number" min={1} value={data.level ?? 1} onChange={(event) => patch({ level: Number(event.target.value) })} /></label>}
+          {isThreeDet && <><label className={styles.field}><span>Idade</span><input value={data.threeDet?.age ?? ''} onChange={(event) => patch({ threeDet: { ...data.threeDet, age: event.target.value } })} /></label><label className={styles.field}><span>Ocupação</span><input value={data.threeDet?.occupation ?? ''} onChange={(event) => patch({ threeDet: { ...data.threeDet, occupation: event.target.value } })} /></label></>}
         </div>
 
         {!isThreat && (classes.length > 0 || races.length > 0) ? <div className={styles.selectRow}>
@@ -199,8 +239,8 @@ export function CharacterSheet({ campaignId, system, data, onChange, variant = '
           {races.length > 0 && <label className={styles.field}><span>Raça</span><select value={data.raceId ?? ''} onChange={(event) => patch({ raceId: event.target.value || undefined })}><option value="">Selecione</option>{races.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
         </div> : null}
 
-        <div className={styles.sectionHeading}><span>{isThreat ? 'Atributos da ameaça' : isOrdem ? 'Atributos do agente' : isDnd ? 'Atributos base' : 'Atributos definidos pelo Mestre'}</span><Badge tone="neutral">{coreAttributes.length} campos</Badge></div>
-        <div className={styles.attrGrid}>{coreAttributes.map((attr) => <label key={attr.id} className={styles.attrCell}><span className={styles.attrLabel}>{attr.shortLabel}</span><small>{attr.name}</small><input type="number" min={attr.min} max={attr.max} value={data.attributes?.[attr.id] ?? attr.defaultVal} onChange={(event) => setAttrValue(attr.id, Number(event.target.value))} /></label>)}</div>
+        <div className={styles.sectionHeading}><span>{isThreat ? 'Atributos da ameaça' : isOrdem ? 'Atributos do agente' : isDnd ? 'Atributos base' : isThreeDet ? 'Atributos fundamentais' : 'Atributos definidos pelo Mestre'}</span><Badge tone="neutral">{coreAttributes.length} campos</Badge></div>
+        <div className={styles.attrGrid}>{coreAttributes.map((attr) => { const value = data.attributes?.[attr.id] ?? attr.defaultVal; return <label key={attr.id} className={styles.attrCell}><span className={styles.attrLabel}>{attr.shortLabel}</span><small>{attr.name}</small><input type="number" min={attr.min} max={attr.max} value={value} onChange={(event) => setAttrValue(attr.id, Number(event.target.value))} />{isThreeDet && <ThreeDetRoller label={attr.name} attribute={value} />}</label>; })}</div>
 
         {(isOrdem || isDnd) && <div className={styles.vitalsGrid}>
           <label className={`${styles.vitalCard} ${styles.vitalPrimary}`}><span>{isOrdem ? 'PV · Pontos de vida' : 'HP · Pontos de vida'}</span><div><input type="number" value={data.vitals?.current ?? data.attributes?.[isOrdem ? 'pv' : 'hp'] ?? 0} onChange={(event) => setVital('current', Number(event.target.value))} /><b>/</b><input type="number" value={data.vitals?.max ?? data.attributes?.[isOrdem ? 'pv' : 'hp'] ?? 0} onChange={(event) => setVital('max', Number(event.target.value))} /></div></label>
@@ -209,11 +249,19 @@ export function CharacterSheet({ campaignId, system, data, onChange, variant = '
         </div>}
 
         {isDnd && <div className={styles.combatGrid}><label className={styles.field}><span>Iniciativa</span><input type="number" value={data.combat?.initiative ?? 0} onChange={(event) => setCombat('initiative', Number(event.target.value))} /></label><label className={styles.field}><span>Deslocamento</span><input type="number" value={data.combat?.movement ?? 9} onChange={(event) => setCombat('movement', Number(event.target.value))} /></label><label className={styles.field}><span>Bônus de proficiência</span><input type="number" value={data.combat?.proficiency ?? 2} onChange={(event) => setCombat('proficiency', Number(event.target.value))} /></label></div>}
+        {isThreeDet && <>
+          <div className={styles.vitalsGrid} aria-label="Recursos do 3DeT Victory">{(['pa', 'pm', 'pv'] as const).map((key) => <label key={key} className={styles.vitalCard}><span>{key.toUpperCase()} · {key === 'pa' ? 'Pontos de Ação' : key === 'pm' ? 'Pontos de Mana' : 'Pontos de Vida'}</span><div><input type="number" min={0} value={threeDetResources[key].current} onChange={(event) => setThreeDetResource(key, 'current', Number(event.target.value))} aria-label={`${key.toUpperCase()} atual`} /><b>/</b><input type="number" min={1} value={threeDetResources[key].max} onChange={(event) => setThreeDetResource(key, 'max', Number(event.target.value))} aria-label={`${key.toUpperCase()} máximo`} /></div></label>)}</div>
+          <div className={styles.combatGrid}><label className={styles.field}><span>Iniciativa · Habilidade</span><input type="number" value={data.combat?.initiative ?? threeDetAttributes.habilidade} onChange={(event) => setCombat('initiative', Number(event.target.value))} /></label><label className={styles.field}><span>XP</span><input type="number" min={0} value={data.threeDet?.build?.xp ?? 0} onChange={(event) => setThreeDetBuild({ xp: Number(event.target.value) })} /></label><label className={styles.field}><span>XP gasto</span><input type="number" min={0} value={data.threeDet?.build?.xpSpent ?? 0} onChange={(event) => setThreeDetBuild({ xpSpent: Number(event.target.value) })} /></label></div>
+          <div className={styles.combatGrid}><label className={styles.field}><span>Defesa-alvo · R</span><input type="number" min={0} value={threeDetDefenseTarget || threeDetAttributes.resistencia} onChange={(event) => setThreeDetDefenseTarget(Number(event.target.value))} /></label><div className={styles.field}><span>Combate rápido</span><Button size="sm" onClick={rollThreeDetAttack}>Rolar ataque · P</Button></div>{threeDetCombatResult && <p role="status" aria-live="polite">{threeDetCombatResult}</p>}</div>
+          <div className={styles.sectionHeading}><span>Construção por pontos</span><Badge tone={threeDetBuild.valid ? 'success' : 'warning'}>{threeDetBuild.remaining} restantes</Badge></div>
+          <div className={styles.combatGrid}><label className={styles.field}><span>Orçamento</span><input type="number" min={0} value={data.threeDet?.build?.budget ?? THREEDET_DEFAULT_BUDGET} onChange={(event) => setThreeDetBuild({ budget: Number(event.target.value) })} /></label><label className={styles.field}><span>Limite de desvantagens</span><input type="number" min={0} value={data.threeDet?.build?.disadvantageLimit ?? THREEDET_DEFAULT_DISADVANTAGE_LIMIT} onChange={(event) => setThreeDetBuild({ disadvantageLimit: Number(event.target.value) })} /></label><div className={styles.field}><span>Gastos</span><strong>{threeDetBuild.spent} · desvantagens +{threeDetBuild.returnedByDisadvantages}</strong></div></div>
+          {!threeDetBuild.valid && <p role="alert">Ficha inválida: os gastos excedem o orçamento disponível.</p>}
+        </>}
       </div>}
 
-      {activeTab === 'skills' && <div className={styles.tabContent}><div className={styles.sectionHeading}><span>{isThreat ? 'Resistências e perícias' : isOrdem ? 'Perícias do agente' : isDnd ? 'Perícias e proficiências' : 'Perícias personalizadas'}</span><Badge tone="info">{Object.values(data.skills ?? {}).filter(Boolean).length} marcadas</Badge></div><div className={styles.skillsGrid}>{visibleSkills.map((skill) => { const checked = data.skills?.[skill.id] ?? false; return <label key={skill.id} className={`${styles.skillRow} ${checked ? styles.skillRowChecked : ''}`}><input type="checkbox" className={styles.skillCheckbox} checked={checked} onChange={() => toggleSkill(skill.id)} /><span>{skill.name}</span>{skill.linkedAttr && <small>{attributes.find((attr) => attr.id === skill.linkedAttr)?.shortLabel ?? skill.linkedAttr}</small>} {(isOrdem || isDnd) && <DiceRoller label={skill.name} modifier={skillModifier(skill)} />}</label>; })}</div>{skills.length > 12 && <Button variant="ghost" size="sm" onClick={() => setShowAllSkills((value) => !value)}>{showAllSkills ? 'Mostrar menos' : `Mostrar todas (${skills.length})`}</Button>}</div>}
+      {activeTab === 'skills' && <div className={styles.tabContent}><div className={styles.sectionHeading}><span>{isThreat ? 'Resistências e perícias' : isOrdem ? 'Perícias do agente' : isDnd ? 'Perícias e proficiências' : isThreeDet ? 'Perícias do personagem' : 'Perícias personalizadas'}</span><Badge tone="info">{Object.values(data.skills ?? {}).filter(Boolean).length} marcadas</Badge></div><div className={styles.skillsGrid}>{visibleSkills.map((skill) => { const checked = data.skills?.[skill.id] ?? false; const threeDetAttribute = threeDetAttributes.habilidade; return <label key={skill.id} className={`${styles.skillRow} ${checked ? styles.skillRowChecked : ''}`}><input type="checkbox" className={styles.skillCheckbox} checked={checked} onChange={() => toggleSkill(skill.id)} /><span>{skill.name}</span>{skill.linkedAttr && <small>{attributes.find((attr) => attr.id === skill.linkedAttr)?.shortLabel ?? skill.linkedAttr}</small>}{isThreeDet && <ThreeDetRoller label={skill.name} attribute={threeDetAttribute} hasSkill={checked} />}{(isOrdem || isDnd) && <DiceRoller label={skill.name} modifier={skillModifier(skill)} />}</label>; })}</div>{skills.length > 12 && <Button variant="ghost" size="sm" onClick={() => setShowAllSkills((value) => !value)}>{showAllSkills ? 'Mostrar menos' : `Mostrar todas (${skills.length})`}</Button>}</div>}
 
-      {activeTab === 'abilities' && <div className={styles.tabContent}><div className={styles.sectionHeading}><span>{isThreat ? 'Ações, poderes e ataques' : isOrdem ? 'Poderes e rituais' : isDnd ? 'Características e talentos' : 'Habilidades personalizadas'}</span><Badge tone="accent">{(data.abilities ?? []).length} itens</Badge></div><div className={styles.addRow}><input value={newAbility} onChange={(event) => setNewAbility(event.target.value)} placeholder={isThreat ? 'Nome da ação ou ataque' : isOrdem ? 'Nome do poder ou ritual' : isDnd ? 'Nome da característica ou talento' : 'Nome da habilidade'} onKeyDown={(event) => event.key === 'Enter' && addAbility()} /><Button icon={<Plus size={14} />} size="sm" onClick={addAbility}>Adicionar</Button></div>{(data.abilities ?? []).length === 0 ? <EmptyState icon={<Sparkles size={18} />} title="Nenhuma habilidade registrada" description="Adicione poderes, talentos, rituais ou capacidades especiais." /> : <div className={styles.itemList}>{data.abilities?.map((item, index) => <article key={item.id} className={styles.itemCard}><div className={styles.itemEditor}><input className={styles.itemInput} value={item.name} onChange={(event) => updateAbility(item.id, { name: event.target.value })} aria-label="Nome da habilidade" /><textarea className={styles.itemTextarea} value={item.description ?? ''} onChange={(event) => updateAbility(item.id, { description: event.target.value })} placeholder="Descrição, efeito e detalhes" aria-label="Descrição da habilidade" /><div className={styles.itemMetaRow}><label>Usos <input type="number" min={0} value={item.uses ?? 0} onChange={(event) => updateAbility(item.id, { uses: Number(event.target.value) })} /></label></div></div><div className={styles.itemActions}><button type="button" onClick={() => moveAbility(item.id, -1)} disabled={index === 0} aria-label="Mover habilidade para cima"><ArrowUp size={13} /></button><button type="button" onClick={() => moveAbility(item.id, 1)} disabled={index === (data.abilities?.length ?? 1) - 1} aria-label="Mover habilidade para baixo"><ArrowDown size={13} /></button><button type="button" onClick={() => removeAbility(item.id)} aria-label="Remover habilidade"><Trash2 size={13} /></button></div></article>)}</div>}</div>}
+      {activeTab === 'abilities' && <div className={styles.tabContent}><div className={styles.sectionHeading}><span>{isThreat ? 'Ações, poderes e ataques' : isOrdem ? 'Poderes e rituais' : isDnd ? 'Características e talentos' : isThreeDet ? 'Vantagens, desvantagens e técnicas' : 'Habilidades personalizadas'}</span><Badge tone="accent">{(data.abilities ?? []).length} itens</Badge></div><div className={styles.addRow}><input value={newAbility} onChange={(event) => setNewAbility(event.target.value)} placeholder={isThreat ? 'Nome da ação ou ataque' : isOrdem ? 'Nome do poder ou ritual' : isDnd ? 'Nome da característica ou talento' : isThreeDet ? 'Nome da vantagem, desvantagem ou técnica' : 'Nome da habilidade'} onKeyDown={(event) => event.key === 'Enter' && addAbility()} /><Button icon={<Plus size={14} />} size="sm" onClick={addAbility}>Adicionar</Button></div>{(data.abilities ?? []).length === 0 ? <EmptyState icon={<Sparkles size={18} />} title="Nenhuma habilidade registrada" description="Adicione poderes, talentos, rituais ou capacidades especiais." /> : <div className={styles.itemList}>{data.abilities?.map((item, index) => <article key={item.id} className={styles.itemCard}><div className={styles.itemEditor}><input className={styles.itemInput} value={item.name} onChange={(event) => updateAbility(item.id, { name: event.target.value })} aria-label="Nome da habilidade" /><textarea className={styles.itemTextarea} value={item.description ?? ''} onChange={(event) => updateAbility(item.id, { description: event.target.value })} placeholder="Descrição, efeito, custo de ativação e fonte de referência" aria-label="Descrição da habilidade" /><div className={styles.itemMetaRow}><label>Usos <input type="number" min={0} value={item.uses ?? 0} onChange={(event) => updateAbility(item.id, { uses: Number(event.target.value) })} /></label></div></div><div className={styles.itemActions}><button type="button" onClick={() => moveAbility(item.id, -1)} disabled={index === 0} aria-label="Mover habilidade para cima"><ArrowUp size={13} /></button><button type="button" onClick={() => moveAbility(item.id, 1)} disabled={index === (data.abilities?.length ?? 1) - 1} aria-label="Mover habilidade para baixo"><ArrowDown size={13} /></button><button type="button" onClick={() => removeAbility(item.id)} aria-label="Remover habilidade"><Trash2 size={13} /></button></div></article>)}</div>}</div>}
 
       {activeTab === 'inventory' && <div className={styles.tabContent}><div className={styles.sectionHeading}><span>{isOrdem ? 'Equipamento e itens' : isDnd ? 'Equipamento' : 'Inventário customizado'}</span><Badge tone="success">{(data.inventory ?? []).length} itens</Badge></div><div className={styles.addRow}><input value={newItem} onChange={(event) => setNewItem(event.target.value)} placeholder="Nome do item ao inventário" onKeyDown={(event) => event.key === 'Enter' && addInventoryItem()} /><Button icon={<Plus size={14} />} size="sm" onClick={addInventoryItem}>Adicionar</Button></div>{(data.inventory ?? []).length === 0 ? <EmptyState icon={<Package size={18} />} title="Inventário vazio" description="Registre armas, equipamentos, artefatos e outros itens importantes." /> : <div className={styles.itemList}>{data.inventory?.map((item, index) => <article key={item.id} className={styles.itemCard}><div className={styles.itemEditor}><input className={styles.itemInput} value={item.name} onChange={(event) => updateInventoryItem(item.id, { name: event.target.value })} aria-label="Nome do item" /><textarea className={styles.itemTextarea} value={item.description ?? ''} onChange={(event) => updateInventoryItem(item.id, { description: event.target.value })} placeholder="Descrição e observações" aria-label="Descrição do item" /><div className={styles.itemMetaRow}><label>Quantidade <input type="number" min={0} value={item.quantity ?? 1} onChange={(event) => updateInventoryItem(item.id, { quantity: Number(event.target.value) })} /></label><label>Usos <input type="number" min={0} value={item.uses ?? 0} onChange={(event) => updateInventoryItem(item.id, { uses: Number(event.target.value) })} /></label></div></div><div className={styles.itemActions}><button type="button" onClick={() => moveInventoryItem(item.id, -1)} disabled={index === 0} aria-label="Mover item para cima"><ArrowUp size={13} /></button><button type="button" onClick={() => moveInventoryItem(item.id, 1)} disabled={index === (data.inventory?.length ?? 1) - 1} aria-label="Mover item para baixo"><ArrowDown size={13} /></button><button type="button" onClick={() => removeInventoryItem(item.id)} aria-label="Remover item"><Trash2 size={13} /></button></div></article>)}</div>}</div>}
 

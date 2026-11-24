@@ -6,7 +6,7 @@ import { logHistory } from './historyService';
 import { favoriteFolderService } from './favoriteFolderService';
 import { requireUser } from '@/lib/auth';
 import { recordAudit } from '@/services/auditService';
-import { getViewerContext, publishedFileWhere, publicationSelect } from '@/lib/publicationPolicy';
+import { getViewerContext, publishedFileWhere, publicationSelect, type ViewerContext } from '@/lib/publicationPolicy';
 
 export interface ListFilesParams {
   campaignId: string;
@@ -17,6 +17,11 @@ export interface ListFilesParams {
   search?: string;
   sort?: SortField;
   direction?: 'asc' | 'desc';
+  includeContent?: boolean;
+  includeData?: boolean;
+  take?: number;
+  skip?: number;
+  viewer?: ViewerContext;
 }
 
 export interface CreateFileInput {
@@ -35,6 +40,30 @@ export interface UpdateFileInput {
   description?: string;
   content?: string;
   data?: Record<string, unknown>;
+}
+
+const fileListTagSelect = {
+  tag: { select: { id: true, campaignId: true, name: true, color: true, icon: true, description: true } }
+} as const;
+
+function fileListSelect(options: Pick<ListFilesParams, 'includeContent' | 'includeData'> = {}) {
+  return {
+    id: true,
+    campaignId: true,
+    type: true,
+    name: true,
+    description: true,
+    ...(options.includeContent ? { content: true } : {}),
+    ...(options.includeData ? { data: true } : {}),
+    isFavorite: true,
+    isArchived: true,
+    isTrashed: true,
+    restrictToGrants: true,
+    trashedAt: true,
+    createdAt: true,
+    updatedAt: true,
+    tags: { select: fileListTagSelect }
+  } satisfies Prisma.CampaignFileSelect;
 }
 
 async function getOrCreateDefaultFavoriteFolderId(campaignId: string): Promise<string> {
@@ -62,29 +91,46 @@ export const fileService = {
     favoritesOnly,
     search,
     sort = 'updatedAt',
-    direction = 'desc'
+    direction = 'desc',
+    includeContent = false,
+    includeData = false,
+    take,
+    skip,
+    viewer: providedViewer
   }: ListFilesParams) {
-    const viewer = await getViewerContext(campaignId, { requirePlayerMode: true });
+    const viewer = providedViewer ?? await getViewerContext(campaignId, { requirePlayerMode: true });
     return prisma.campaignFile.findMany({
       where: {
-        ...publishedFileWhere(viewer),
-        type,
-        isTrashed: viewer.kind === 'OWNER' ? scope === 'trash' : false,
-        isArchived: viewer.kind === 'OWNER' ? scope === 'archived' ? true : scope === 'active' ? false : undefined : false,
-        isFavorite: favoritesOnly ? true : undefined,
-        tags: tagIds?.length ? { some: { tagId: { in: tagIds } } } : undefined,
-        OR: search
-          ? [
-              { name: { contains: search, mode: 'insensitive' } },
-              { description: { contains: search, mode: 'insensitive' } },
-              { content: { contains: search, mode: 'insensitive' } },
-              { id: { equals: search } }
-            ]
-          : undefined
+        AND: [
+          publishedFileWhere(viewer),
+          {
+            type,
+            isTrashed: viewer.kind === 'OWNER' ? scope === 'trash' : false,
+            isArchived: viewer.kind === 'OWNER' ? scope === 'archived' ? true : scope === 'active' ? false : undefined : false,
+            isFavorite: favoritesOnly ? true : undefined,
+            tags: tagIds?.length ? { some: { tagId: { in: tagIds } } } : undefined,
+            OR: search
+              ? [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { description: { contains: search, mode: 'insensitive' } },
+                  { content: { contains: search, mode: 'insensitive' } },
+                  { id: { equals: search } }
+                ]
+              : undefined
+          }
+        ]
       },
-      include: { tags: { include: { tag: true } } },
-      orderBy: { [sort]: direction }
+      select: fileListSelect({ includeContent, includeData }),
+      orderBy: { [sort]: direction },
+      ...(take === undefined ? {} : { take }),
+      ...(skip === undefined ? {} : { skip })
     });
+  },
+
+  async listPage(params: ListFilesParams & { page: number; pageSize: number }) {
+    const { page, pageSize, ...listParams } = params;
+    const files = await this.list({ ...listParams, take: pageSize + 1, skip: page * pageSize });
+    return { files: files.slice(0, pageSize), hasMore: files.length > pageSize };
   },
 
   async countsByType(campaignId: string) {
@@ -108,13 +154,61 @@ export const fileService = {
     }
     return prisma.campaignFile.findUnique({
       where: { id },
-      include: {
-        tags: { include: { tag: true } },
-        attachments: true,
-        comments: { orderBy: { createdAt: 'desc' } },
-        history: { orderBy: { createdAt: 'desc' } },
-        relationshipsFrom: { include: { to: true } },
-        relationshipsTo: { include: { from: true } }
+      select: {
+        id: true,
+        campaignId: true,
+        type: true,
+        name: true,
+        description: true,
+        content: true,
+        data: true,
+        isFavorite: true,
+        isArchived: true,
+        isTrashed: true,
+        restrictToGrants: true,
+        trashedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        tags: { select: { tag: { select: { id: true, campaignId: true, name: true, color: true, icon: true, description: true } } } },
+        attachments: { select: { id: true, fileId: true, url: true, label: true, mimeType: true, createdAt: true } },
+        comments: { orderBy: { createdAt: 'desc' }, select: { id: true, fileId: true, authorId: true, body: true, createdAt: true } },
+        history: { orderBy: { createdAt: 'desc' }, select: { id: true, fileId: true, action: true, summary: true, authorId: true, createdAt: true } },
+        relationshipsFrom: {
+          select: {
+            id: true,
+            campaignId: true,
+            fromId: true,
+            toId: true,
+            typeId: true,
+            kind: true,
+            label: true,
+            description: true,
+            importance: true,
+            visibility: true,
+            createdAt: true,
+            updatedAt: true,
+            type: true,
+            to: { select: { id: true, campaignId: true, type: true, name: true, isArchived: true, isTrashed: true } }
+          }
+        },
+        relationshipsTo: {
+          select: {
+            id: true,
+            campaignId: true,
+            fromId: true,
+            toId: true,
+            typeId: true,
+            kind: true,
+            label: true,
+            description: true,
+            importance: true,
+            visibility: true,
+            createdAt: true,
+            updatedAt: true,
+            type: true,
+            from: { select: { id: true, campaignId: true, type: true, name: true, isArchived: true, isTrashed: true } }
+          }
+        }
       }
     });
   },

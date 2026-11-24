@@ -112,7 +112,7 @@ export default function InvestigationBoardPage() {
     if (!campaignId) return;
     let cancelled = false;
     Promise.all([
-      filesApi.list(campaignId, { scope: filters.scope, sort: 'name', direction: 'asc' }),
+      filesApi.list(campaignId, { scope: filters.scope, sort: 'name', direction: 'asc', includeContent: true, includeData: true }),
       relationshipsApi.graph(campaignId)
     ]).then(([nextFiles, graph]) => {
       if (cancelled) return;

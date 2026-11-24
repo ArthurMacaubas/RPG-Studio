@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Download, Eye, Plus, Radio, ShieldCheck, Trash2, Users } from 'lucide-react';
+import { Download, Eye, Palette, Plus, Radio, ShieldCheck, Trash2, Users } from 'lucide-react';
 import { tagsApi, campaignsApi } from '@/lib/api';
 import { CustomSystemBuilder } from '@/components/CustomSystemBuilder';
 import type { Campaign, Tag } from '@/types';
@@ -66,6 +66,7 @@ export default function ConfiguracoesPage() {
         <div className={styles.panelTitle}>Centro de controle</div>
         <div className={styles.panelHint}>Atalhos para as decisões que mais impactam a experiência da mesa{campaign ? ` · ${SYSTEM_LABELS[campaign.system]}` : ''}.</div>
         <div className={styles.settingsGrid}>
+          <Link href={`/campaigns/${campaignId}/configuracoes/aparencia` as never} className={styles.settingsCard}><Palette size={17} /><span><strong>Aparência</strong><small>Temas, cores, tipografia e identidade visual.</small></span></Link>
           <Link href={`/campaigns/${campaignId}/convites` as never} className={styles.settingsCard}><Users size={17} /><span><strong>Membros e convites</strong><small>Gerencie quem participa da campanha.</small></span></Link>
           <Link href={`/campaigns/${campaignId}/modo-jogador` as never} className={styles.settingsCard}><Eye size={17} /><span><strong>Visibilidade do jogador</strong><small>Escolha o que aparece na área autenticada.</small></span></Link>
           <Link href={`/campaigns/${campaignId}/sala` as never} className={styles.settingsCard}><Radio size={17} /><span><strong>Sala de sessão</strong><small>Controle o ritmo e a pauta da mesa.</small></span></Link>

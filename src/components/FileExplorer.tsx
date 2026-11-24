@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Search, LayoutGrid, List, Archive, Trash2, Star, StarOff, Copy, RotateCcw, X } from 'lucide-react';
 import { FileCard } from './FileCard';
@@ -14,6 +14,7 @@ import { useSelection } from '@/hooks/useSelection';
 import type { CampaignFile, ExplorerScope, FileType, SortField, Tag, ViewMode } from '@/types';
 import { FILE_TYPE_LABELS } from '@/types';
 import styles from './FileExplorer.module.css';
+import type { FileExplorerInitialData } from '@/services/fileExplorerService';
 
 interface FileExplorerProps {
   campaignId: string;
@@ -21,6 +22,7 @@ interface FileExplorerProps {
   fixedType?: FileType;
   title: string;
   breadcrumb: { label: string; href?: string }[];
+  initialData?: FileExplorerInitialData;
 }
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
@@ -30,44 +32,74 @@ const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: 'type', label: 'Tipo' }
 ];
 
-export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb }: FileExplorerProps) {
+export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb, initialData }: FileExplorerProps) {
   const router = useRouter();
-  const [files, setFiles] = useState<CampaignFile[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [files, setFiles] = useState<CampaignFile[]>(initialData?.files ?? []);
+  const [tags, setTags] = useState<Tag[]>(initialData?.tags ?? []);
   const [activeTagIds, setActiveTagIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 250);
   const [sort, setSort] = useState<SortField>('updatedAt');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialData);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const pageRef = useRef(0);
+  const initialDataKey = initialData ? `${campaignId}:${scope}:${fixedType ?? ''}` : null;
+  const appliedInitialDataKeyRef = useRef(initialDataKey);
+  const skipInitialLoadRef = useRef(Boolean(initialData));
   const [showNewModal, setShowNewModal] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number; file: CampaignFile } | null>(null);
 
   const { selected, toggle, selectOnly, clear, count } = useSelection();
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (append = false) => {
+    const nextPage = append ? pageRef.current + 1 : 0;
+    if (append) setLoadingMore(true);
+    else setLoading(true);
     try {
-      const [fileResults, tagResults] = await Promise.all([
-        filesApi.list(campaignId, {
-          scope,
-          type: fixedType,
-          search: debouncedSearch || undefined,
-          tagIds: activeTagIds.length ? activeTagIds : undefined,
-          sort
-        }),
-        tagsApi.list(campaignId)
-      ]);
-      setFiles(fileResults);
-      setTags(tagResults);
+      const result = await filesApi.listPage(campaignId, {
+        scope,
+        type: fixedType,
+        search: debouncedSearch || undefined,
+        tagIds: activeTagIds.length ? activeTagIds : undefined,
+        sort
+      }, nextPage);
+      setFiles((current) => append ? [...current, ...result.files] : result.files);
+      setHasMore(result.hasMore);
+      pageRef.current = nextPage;
     } finally {
-      setLoading(false);
+      if (append) setLoadingMore(false);
+      else setLoading(false);
     }
   }, [campaignId, scope, fixedType, debouncedSearch, activeTagIds, sort]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (initialData && appliedInitialDataKeyRef.current !== initialDataKey) {
+      setFiles(initialData.files);
+      setTags(initialData.tags);
+      setHasMore(initialData.hasMore);
+      pageRef.current = 0;
+      appliedInitialDataKeyRef.current = initialDataKey;
+      return;
+    }
+    if (skipInitialLoadRef.current) {
+      skipInitialLoadRef.current = false;
+      return;
+    }
+    void load();
+  }, [initialData, initialDataKey, load]);
+
+  useEffect(() => {
+    if (initialData) return;
+    let cancelled = false;
+    tagsApi.list(campaignId).then((result) => {
+      if (!cancelled) setTags(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [campaignId, initialData]);
 
   function openFile(file: CampaignFile) {
     router.push(`/campaigns/${campaignId}/arquivos/${file.id}` as never);
@@ -81,31 +113,31 @@ export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb }
   async function runBulk(action: 'archive' | 'restore' | 'trash' | 'restoreFromTrash' | 'permanentDelete') {
     await filesApi.bulk(Array.from(selected), action);
     clear();
-    load();
+    void load();
   }
 
   function contextActionsFor(file: CampaignFile): ContextMenuAction[] {
     if (scope === 'trash') {
       return [
-        { label: 'Restaurar', icon: <RotateCcw size={14} />, onClick: async () => { await filesApi.restoreFromTrash(file.id); load(); } },
+        { label: 'Restaurar', icon: <RotateCcw size={14} />, onClick: async () => { await filesApi.restoreFromTrash(file.id); void load(); } },
         {
           label: 'Excluir permanentemente',
           icon: <Trash2 size={14} />,
           danger: true,
           divider: true,
-          onClick: async () => { await filesApi.permanentDelete(file.id); load(); }
+          onClick: async () => { await filesApi.permanentDelete(file.id); void load(); }
         }
       ];
     }
     if (scope === 'archived') {
       return [
-        { label: 'Restaurar', icon: <RotateCcw size={14} />, onClick: async () => { await filesApi.restore(file.id); load(); } },
+        { label: 'Restaurar', icon: <RotateCcw size={14} />, onClick: async () => { await filesApi.restore(file.id); void load(); } },
         {
           label: 'Mover para lixeira',
           icon: <Trash2 size={14} />,
           danger: true,
           divider: true,
-          onClick: async () => { await filesApi.trash(file.id); load(); }
+          onClick: async () => { await filesApi.trash(file.id); void load(); }
         }
       ];
     }
@@ -115,14 +147,14 @@ export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb }
         icon: file.isFavorite ? <StarOff size={14} /> : <Star size={14} />,
         onClick: () => toggleFavorite(file)
       },
-      { label: 'Duplicar', icon: <Copy size={14} />, onClick: async () => { await filesApi.duplicate(file.id); load(); } },
-      { label: 'Arquivar', icon: <Archive size={14} />, onClick: async () => { await filesApi.archive(file.id); load(); } },
+      { label: 'Duplicar', icon: <Copy size={14} />, onClick: async () => { await filesApi.duplicate(file.id); void load(); } },
+      { label: 'Arquivar', icon: <Archive size={14} />, onClick: async () => { await filesApi.archive(file.id); void load(); } },
       {
         label: 'Mover para lixeira',
         icon: <Trash2 size={14} />,
         danger: true,
         divider: true,
-        onClick: async () => { await filesApi.trash(file.id); load(); }
+        onClick: async () => { await filesApi.trash(file.id); void load(); }
       }
     ];
   }
@@ -279,6 +311,14 @@ export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb }
               onContextMenu={(e) => setMenu({ x: e.clientX, y: e.clientY, file })}
             />
           ))}
+        </div>
+      )}
+
+      {hasMore && (
+        <div className={styles.selectionBar}>
+          <button className={styles.selectionButton} onClick={() => void load(true)} disabled={loadingMore}>
+            {loadingMore ? 'Carregando…' : 'Carregar mais arquivos'}
+          </button>
         </div>
       )}
 

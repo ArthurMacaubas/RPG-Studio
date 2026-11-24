@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { assertCampaignAccess, assertFileAccess, getCampaignAccess } from '@/lib/access';
-import { getViewerContext, publishedFileWhere } from '@/lib/publicationPolicy';
+import { getViewerContext, publishedFileWhere, type ViewerContext } from '@/lib/publicationPolicy';
 
 export interface CreateTagInput {
   campaignId: string;
@@ -18,8 +18,8 @@ export interface UpdateTagInput {
 }
 
 export const tagService = {
-  async list(campaignId: string) {
-    const viewer = await getViewerContext(campaignId, { requirePlayerMode: true });
+  async list(campaignId: string, providedViewer?: ViewerContext) {
+    const viewer = providedViewer ?? await getViewerContext(campaignId, { requirePlayerMode: true });
     return prisma.tag.findMany({ where: { campaignId, ...(viewer.kind === 'OWNER' ? {} : { files: { some: { file: publishedFileWhere(viewer) } } }) }, orderBy: { name: 'asc' } });
   },
 
