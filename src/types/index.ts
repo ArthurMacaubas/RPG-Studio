@@ -1,4 +1,4 @@
-export type SystemType = 'ORDEM_PARANORMAL' | 'DND_5E' | 'CUSTOM';
+export type SystemType = 'ORDEM_PARANORMAL' | 'DND_5E' | 'THREEDET_VICTORY' | 'CUSTOM';
 
 export type FileType =
   | 'CAMPAIGN'
@@ -139,6 +139,10 @@ export interface FavoriteEntry {
   file?: CampaignFile;
 }
 
+export interface FavoriteFolderNavigation extends Omit<FavoriteFolder, 'entries'> {
+  entries?: Array<Pick<FavoriteEntry, 'id' | 'folderId' | 'fileId' | 'order'> & { file?: Pick<CampaignFile, 'id' | 'name'> }>;
+}
+
 export interface CampaignFile {
   id: string;
   campaignId: string;
@@ -241,6 +245,7 @@ export type SortDirection = 'asc' | 'desc';
 export const SYSTEM_LABELS: Record<SystemType, string> = {
   ORDEM_PARANORMAL: 'Ordem Paranormal',
   DND_5E: 'D&D 5e',
+  THREEDET_VICTORY: '3DeT Victory',
   CUSTOM: 'Personalizado'
 };
 
@@ -385,6 +390,31 @@ export interface SheetData {
   pronouns?: string;
   vitals?: { current?: number; max?: number; secondaryCurrent?: number; secondaryMax?: number };
   combat?: { defense?: number; initiative?: number; movement?: number; proficiency?: number };
+  threeDet?: {
+    resources?: {
+      pa?: { current: number; max: number };
+      pm?: { current: number; max: number };
+      pv?: { current: number; max: number };
+    };
+    resourceModifiers?: { pa?: number; pm?: number; pv?: number };
+    build?: {
+      budget: number;
+      disadvantageLimit: number;
+      advantages: Array<{ id: string; name: string; cost?: number; description?: string }>;
+      disadvantages: Array<{ id: string; name: string; value?: number; description?: string }>;
+      archetypes: Array<{ id: string; name: string; cost?: number; description?: string }>;
+      xp: number;
+      xpSpent: number;
+    };
+    age?: string;
+    occupation?: string;
+    history?: string;
+    personality?: string;
+    objectives?: string;
+    techniques?: string;
+    conditions?: string[];
+    relationships?: string;
+  };
   inventory?: SheetInventoryItem[];
   abilities?: SheetAbilityItem[];
   notes?: string;

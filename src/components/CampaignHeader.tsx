@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element -- o banner pode ser uma data URL validada do tema. */
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -8,7 +9,7 @@ import type { CampaignRole } from '@/lib/access';
 import styles from './CampaignHeader.module.css';
 
 const ROUTE_LABELS: Record<string, string> = {
-  arquivos: 'Biblioteca', personagens: 'Personagens', npcs: 'NPCs', ameacas: 'Ameaças', locais: 'Locais', objetos: 'Objetos', pistas: 'Pistas', puzzles: 'Puzzles', documentos: 'Documentos', eventos: 'Eventos', sessoes: 'Sessões', timeline: 'Timeline', mapa: 'Mapa', investigacao: 'Quadro de Investigação', sala: 'Sala de Sessão', arquivados: 'Arquivados', lixeira: 'Lixeira', 'modo-jogador': 'Modo Jogador', convites: 'Convites e membros', 'importar-exportar': 'Importar e exportar', 'documentacao-json': 'Template JSON', configuracoes: 'Configurações', jogador: 'Área do jogador'
+  arquivos: 'Biblioteca', personagens: 'Personagens', npcs: 'NPCs', ameacas: 'Ameaças', locais: 'Locais', objetos: 'Objetos', pistas: 'Pistas', puzzles: 'Puzzles', documentos: 'Documentos', eventos: 'Eventos', sessoes: 'Sessões', timeline: 'Timeline', mapa: 'Mapa', investigacao: 'Quadro de Investigação', sala: 'Sala de Sessão', arquivados: 'Arquivados', lixeira: 'Lixeira', 'modo-jogador': 'Modo Jogador', convites: 'Convites e membros', 'importar-exportar': 'Importar e exportar', 'documentacao-json': 'Template JSON', configuracoes: 'Configurações', aparencia: 'Aparência', jogador: 'Área do jogador'
 };
 
 function resolveLocation(pathname: string, campaignId: string) {
@@ -18,15 +19,16 @@ function resolveLocation(pathname: string, campaignId: string) {
   return ROUTE_LABELS[relative.at(-1) ?? ''] ?? 'Campanha';
 }
 
-export function CampaignHeader({ campaignId, campaignName, role }: { campaignId: string; campaignName: string; role: CampaignRole }) {
+export function CampaignHeader({ campaignId, campaignName, subtitle, bannerUrl, role }: { campaignId: string; campaignName: string; subtitle?: string; bannerUrl?: string; role: CampaignRole }) {
   const pathname = usePathname() ?? '';
   const location = resolveLocation(pathname, campaignId);
   const isRoot = location === 'Visão geral';
 
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} ${bannerUrl ? styles.withBanner : ''}`}>
+      {bannerUrl ? <img className={styles.banner} src={bannerUrl} alt="" /> : null}
       <div className={styles.context}>
-        <span className={styles.product}><Layers3 size={13} aria-hidden="true" /> Workspace de campanha</span>
+        <span className={styles.product}><Layers3 size={13} aria-hidden="true" /> {subtitle || 'Workspace de campanha'}</span>
         <div className={styles.crumbs} aria-label="Localização atual">
           <Link href={`/campaigns/${campaignId}` as never}>{campaignName}</Link>
           {!isRoot && <><ChevronRight size={14} aria-hidden="true" /><span>{location}</span></>}

@@ -30,4 +30,6 @@
 .typeBarFill { height: 100%; border-radius: inherit; background: var(--color-accent-secondary); }
 .typeBarCount { width: 24px; color: var(--color-text-faint); font-family: var(--font-mono); font-size: var(--font-size-caption); text-align: right; }
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .statRow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .headerTop { align-items: flex-start; flex-direction: column; } .quickActions { display: grid; grid-template-columns: 1fr 1fr; } .quickAction { justify-content: center; text-align: center; } .statRow { gap: var(--space-2); } .statCard { padding: var(--space-4) var(--space-3); } .statValue { font-size: 1.55rem; } .panel { padding: var(--space-4); } .typeBarLabel { width: 88px; } }
+@media (max-width: 390px) { .statRow { grid-template-columns: 1fr; } }

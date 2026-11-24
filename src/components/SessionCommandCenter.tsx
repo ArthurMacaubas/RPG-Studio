@@ -49,7 +49,7 @@ export function SessionCommandCenter({ campaignId }: SessionCommandCenterProps) 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [sessionFiles, playerMode, audit] = await Promise.all([filesApi.list(campaignId, { scope: 'active', type: 'SESSION', sort: 'updatedAt', direction: 'desc' }), playerModeApi.get(campaignId), auditApi.list(campaignId, 24)]);
+      const [sessionFiles, playerMode, audit] = await Promise.all([filesApi.list(campaignId, { scope: 'active', type: 'SESSION', sort: 'updatedAt', direction: 'desc', includeData: true }), playerModeApi.get(campaignId), auditApi.list(campaignId, 24)]);
       setSessions(sessionFiles);
       setSelectedId((current) => current && sessionFiles.some((file) => file.id === current) ? current : sessionFiles[0]?.id ?? '');
       setPublishedCount(playerMode.files.filter((file) => file.isVisible).length);

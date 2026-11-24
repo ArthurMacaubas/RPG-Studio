@@ -92,3 +92,18 @@ export const DND5E_SKILLS: SheetSkill[] = [
   { id: 'stealth', name: 'Furtividade', linkedAttr: 'dex' },
   { id: 'survival', name: 'Sobrevivência', linkedAttr: 'wis' }
 ];
+
+export const THREEDET_VICTORY_ATTRIBUTES: SheetAttribute[] = [
+  { id: 'poder', name: 'Poder', shortLabel: 'P', min: 0, max: 10, defaultVal: 0 },
+  { id: 'habilidade', name: 'Habilidade', shortLabel: 'H', min: 0, max: 10, defaultVal: 0 },
+  { id: 'resistencia', name: 'Resistência', shortLabel: 'R', min: 0, max: 10, defaultVal: 0 }
+];
+
+export const THREEDET_VICTORY_SKILLS: SheetSkill[] = [
+  { id: 'animais', name: 'Animais' }, { id: 'arte', name: 'Arte' },
+  { id: 'esporte', name: 'Esporte' }, { id: 'influencia', name: 'Influência' },
+  { id: 'luta', name: 'Luta' }, { id: 'manha', name: 'Manha' },
+  { id: 'maquinas', name: 'Máquinas' }, { id: 'medicina', name: 'Medicina' },
+  { id: 'mistica', name: 'Mística' }, { id: 'percepcao', name: 'Percepção' },
+  { id: 'saber', name: 'Saber' }, { id: 'sobrevivencia', name: 'Sobrevivência' }
+];

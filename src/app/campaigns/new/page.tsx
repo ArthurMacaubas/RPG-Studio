@@ -8,7 +8,7 @@ import styles from './page.module.css';
 
 export const dynamic = 'force-dynamic';
 
-const SYSTEMS: SystemType[] = ['ORDEM_PARANORMAL', 'DND_5E', 'CUSTOM'];
+const SYSTEMS: SystemType[] = ['ORDEM_PARANORMAL', 'DND_5E', 'THREEDET_VICTORY', 'CUSTOM'];
 
 export default function NewCampaignPage() {
   const [name, setName] = useState('');
