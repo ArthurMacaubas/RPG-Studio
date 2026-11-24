@@ -144,6 +144,7 @@ export function Sidebar({ campaignId, campaignName, campaignSubtitle, logoUrl, s
             <Link
               key={item.label}
               href={`${base}${item.href}` as never}
+              prefetch={false}
               className={`${styles.navItem} ${isActive(item.href) ? styles.navItemActive : ''}`}
               onClick={closeMobile}
             >
@@ -170,6 +171,7 @@ export function Sidebar({ campaignId, campaignName, campaignSubtitle, logoUrl, s
             <Link
               key={item.label}
               href={`${base}${item.href}` as never}
+              prefetch={false}
               className={`${styles.navItem} ${isActive(item.href) ? styles.navItemActive : ''}`}
               onClick={closeMobile}
             >
