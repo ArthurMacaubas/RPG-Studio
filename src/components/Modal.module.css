@@ -1,5 +1,5 @@
 .overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: var(--space-5); background: rgba(4, 8, 9, .76); backdrop-filter: blur(7px); }
-.dialog { width: 100%; max-height: min(88vh, 860px); overflow: auto; padding: clamp(18px, 3vw, 26px); border: 1px solid var(--color-border-strong); border-radius: var(--radius-xl); background: var(--color-surface-elevated); box-shadow: var(--shadow-float); animation: dialogIn 180ms var(--ease-out); }
+.dialog { width: 100%; min-width: 0; max-width: 100%; max-height: min(88vh, 860px); overflow: auto; padding: clamp(18px, 3vw, 26px); border: 1px solid var(--color-border-strong); border-radius: var(--radius-xl); background: var(--color-surface-elevated); box-shadow: var(--shadow-float); animation: dialogIn 180ms var(--ease-out); }
 .sm { max-width: 420px; }
 .md { max-width: 560px; }
 .lg { max-width: 760px; }
