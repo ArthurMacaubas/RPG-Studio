@@ -1,4 +1,13 @@
 import type { Metadata } from 'next';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/cinzel/500.css';
+import '@fontsource/cinzel/600.css';
+import '@fontsource/cinzel/700.css';
+import '@fontsource/noto-serif-jp/500.css';
+import '@fontsource/noto-serif-jp/600.css';
 import '@/styles/globals.css';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import { CommandPalette } from '@/components/ui/CommandPalette';

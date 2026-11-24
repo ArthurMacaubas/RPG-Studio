@@ -1,0 +1,5 @@
+.page { display: grid; gap: var(--space-5); }
+.header { padding: var(--space-3) 0 var(--space-4); border-bottom: 1px solid var(--color-border-subtle); }
+.header span { color: var(--color-accent); font-family: var(--font-mono); font-size: var(--font-size-caption); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.header h1 { margin-top: 6px; }
+.header p { max-width: 680px; margin: 8px 0 0; color: var(--color-text-muted); }
