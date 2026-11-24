@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm exec prisma generate && NODE_ENV=production next build",
+    "build": "prisma generate && NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
@@ -28,6 +28,13 @@
     "test:db:q09-public-briefing-timeline": "RUN_DB_TESTS=1 INTEGRATION_TEST_DATABASE=1 tsx scripts/q09-public-briefing-timeline-db.ts"
   },
   "dependencies": {
+    "@fontsource/cinzel": "^5.2.8",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/noto-serif-jp": "^5.2.8",
+    "@fontsource/rajdhani": "^5.3.0",
+    "@fontsource/source-serif-4": "^5.3.1",
     "@prisma/client": "^5.18.0",
     "lucide-react": "^0.427.0",
     "next": "^14.2.5",

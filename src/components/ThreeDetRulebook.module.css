@@ -1,0 +1,14 @@
+.panel { display: grid; gap: 18px; }
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
+.search { display: flex; align-items: center; gap: 8px; flex: 1 1 240px; padding: 9px 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; }
+.search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--text); }
+.toolbar select { min-width: 150px; padding: 9px 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.card { padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.card span { color: var(--primary); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+.card h2 { margin: 7px 0; font-size: 18px; }
+.card p { margin: 0; color: var(--text-secondary); line-height: 1.5; }
+.card small { display: block; margin-top: 12px; color: var(--text-secondary); }
+.notice { color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.notice a { color: var(--links); }
+.empty { color: var(--text-secondary); }
