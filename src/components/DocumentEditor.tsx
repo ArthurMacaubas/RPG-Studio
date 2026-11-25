@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bold, Code2, Heading2, ImagePlus, Italic, Link2, List, ListOrdered, Minus, Quote, Redo2, Sparkles, Strikethrough, Undo2 } from 'lucide-react';
 import { htmlToMarkdown, markdownToHtml } from '@/lib/markdown';
+import { MediaPicker } from './MediaPicker';
 import styles from './DocumentEditor.module.css';
 
 export interface DocumentEntityOption {
@@ -15,6 +16,8 @@ interface DocumentEditorProps {
   content: string;
   onChange: (content: string) => void;
   mode: 'visual' | 'markdown';
+  campaignId?: string;
+  fileId?: string;
   entityOptions?: DocumentEntityOption[];
   entityHref?: (id: string) => string;
 }
@@ -32,10 +35,11 @@ function ToolbarButton({ label, onClick, children }: { label: string; onClick: (
   return <button type="button" className={styles.toolButton} onMouseDown={(event) => event.preventDefault()} onClick={onClick} aria-label={label} title={label}>{children}</button>;
 }
 
-export function DocumentEditor({ content, onChange, mode, entityOptions = [], entityHref }: DocumentEditorProps) {
+export function DocumentEditor({ content, onChange, mode, campaignId, fileId, entityOptions = [], entityHref }: DocumentEditorProps) {
   const visualRef = useRef<HTMLDivElement>(null);
   const lastRenderedContent = useRef<string | null>(null);
   const [slashQuery, setSlashQuery] = useState('');
+  const slashCommands = campaignId && fileId ? commands.filter((command) => command.key !== 'imagem') : commands;
 
   useEffect(() => {
     if (mode !== 'visual' || !visualRef.current) return;
@@ -106,13 +110,14 @@ export function DocumentEditor({ content, onChange, mode, entityOptions = [], en
         <ToolbarButton label="Citação" onClick={() => runCommand('formatBlock', 'blockquote')}><Quote size={15} /></ToolbarButton>
         <ToolbarButton label="Bloco de código" onClick={() => insertHtml('<pre><code>código</code></pre>')}><Code2 size={15} /></ToolbarButton>
         <ToolbarButton label="Inserir link" onClick={() => { const url = window.prompt('URL do link'); if (url) runCommand('createLink', url); }}><Link2 size={15} /></ToolbarButton>
+        {campaignId && fileId ? <MediaPicker campaignId={campaignId} fileId={fileId} purpose="CONTENT" triggerLabel="Inserir imagem" onSelect={(asset) => insertHtml(`<p><img src="${asset.url}" alt="${(asset.altText || asset.displayName).replace(/"/g, '&quot;')}" /></p>`)} /> : <ToolbarButton label="Inserir imagem" onClick={() => executeSlashCommand('imagem')}><ImagePlus size={15} /></ToolbarButton>}
         <ToolbarButton label="Inserir divisor" onClick={() => insertHtml('<hr><p><br></p>')}><Minus size={15} /></ToolbarButton>
         <span className={styles.toolbarHint}>Digite / para comandos</span>
       </div>
       <div ref={visualRef} className={styles.visualInput} contentEditable suppressContentEditableWarning onInput={emitVisualChange} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') event.preventDefault(); }} aria-label="Editor visual do documento" role="textbox" />
       {slashQuery !== '' && (
         <div className={styles.commandMenu} role="menu" aria-label="Comandos do editor">
-          {commands.filter((command) => command.key.includes(slashQuery.toLowerCase())).map((command) => { const Icon = command.icon; return <button type="button" role="menuitem" key={command.key} onMouseDown={(event) => event.preventDefault()} onClick={() => executeSlashCommand(command.key)}><Icon size={15} /><span><strong>/{command.key}</strong><small>{command.label}</small></span></button>; })}
+          {slashCommands.filter((command) => command.key.includes(slashQuery.toLowerCase())).map((command) => { const Icon = command.icon; return <button type="button" role="menuitem" key={command.key} onMouseDown={(event) => event.preventDefault()} onClick={() => executeSlashCommand(command.key)}><Icon size={15} /><span><strong>/{command.key}</strong><small>{command.label}</small></span></button>; })}
           {slashQuery === 'entidade' && entityOptions.slice(0, 5).map((entity) => <button type="button" role="menuitem" key={entity.id} onClick={() => { insertHtml(`[[${entity.id}|${entity.name}]]&nbsp;`); }}><Link2 size={15} /><span><strong>{entity.name}</strong><small>{entity.type}</small></span></button>)}
         </div>
       )}

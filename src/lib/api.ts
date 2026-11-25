@@ -89,7 +89,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const isMultipart = typeof FormData !== 'undefined' && init?.body instanceof FormData;
   const res = await fetch(url, {
     ...init,
-    headers: isMultipart ? init?.headers : { 'Content-Type': 'application/json', ...(init?.headers ?? {}) }
+    headers: isMultipart ? { Accept: 'application/json', ...(init?.headers ?? {}) } : { 'Content-Type': 'application/json', ...(init?.headers ?? {}) }
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -280,6 +280,77 @@ export const filesApi = {
 
   removeAttachment(fileId: string, attachmentId: string) {
     return request(`/api/files/${fileId}/attachments/${attachmentId}`, { method: 'DELETE' });
+  }
+};
+
+export interface MediaListQuery {
+  search?: string;
+  category?: string;
+  mimeType?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: 'updatedAt' | 'createdAt' | 'displayName' | 'byteSize';
+  direction?: 'asc' | 'desc';
+}
+
+export const mediaApi = {
+  list(campaignId: string, query: MediaListQuery = {}) {
+    const params = new URLSearchParams();
+    if (query.search) params.set('search', query.search);
+    if (query.category) params.set('category', query.category);
+    if (query.mimeType) params.set('mimeType', query.mimeType);
+    params.set('page', String(query.page ?? 0));
+    params.set('pageSize', String(query.pageSize ?? 30));
+    if (query.sort) params.set('sort', query.sort);
+    if (query.direction) params.set('dir', query.direction);
+    return request<{ items: import('@/types').MediaAsset[]; hasMore: boolean; storageConfigured: boolean }>(`/api/campaigns/${campaignId}/media?${params}`);
+  },
+
+  async upload(campaignId: string, files: File[], input: { category?: string; tags?: string[]; visibility?: 'PRIVATE' | 'PUBLISHED'; altText?: string } = {}, onProgress?: (percent: number) => void) {
+    const form = new FormData();
+    files.forEach((file) => form.append('file', file));
+    if (input.category) form.append('category', input.category);
+    if (input.tags?.length) form.append('tags', JSON.stringify(input.tags));
+    if (input.visibility) form.append('visibility', input.visibility);
+    if (input.altText) form.append('altText', input.altText);
+    return new Promise<{ items: import('@/types').MediaAsset[] }>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/api/campaigns/${campaignId}/media`);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.responseType = 'json';
+      xhr.upload.onprogress = (event) => { if (event.lengthComputable) onProgress?.(Math.round((event.loaded / event.total) * 100)); };
+      xhr.onerror = () => reject(new Error('Falha de rede durante o upload.'));
+      xhr.onload = () => {
+        const body = xhr.response ?? (() => { try { return JSON.parse(xhr.responseText); } catch { return {}; } })();
+        if (xhr.status < 200 || xhr.status >= 300) reject(new Error(body?.error?.formErrors?.[0] ?? body?.error ?? 'Falha ao enviar mídia.'));
+        else resolve(body);
+      };
+      xhr.send(form);
+    });
+  },
+
+  update(campaignId: string, assetId: string, input: Partial<Pick<import('@/types').MediaAsset, 'displayName' | 'description' | 'altText' | 'category' | 'tags' | 'visibility' | 'focalX' | 'focalY'>>) {
+    return request<import('@/types').MediaAsset>(`/api/campaigns/${campaignId}/media/${assetId}`, { method: 'PATCH', body: JSON.stringify(input) });
+  },
+
+  remove(campaignId: string, assetId: string) {
+    return request<{ ok: true }>(`/api/campaigns/${campaignId}/media/${assetId}`, { method: 'DELETE' });
+  },
+
+  attach(campaignId: string, assetId: string, input: { fileId: string; purpose: 'COVER' | 'PRIMARY' | 'CONTENT' | 'GALLERY' | 'MAP' | 'MARKER'; position?: number; caption?: string; replace?: boolean }) {
+    return request(`/api/campaigns/${campaignId}/media/${assetId}/references`, { method: 'POST', body: JSON.stringify(input) });
+  },
+
+  detach(campaignId: string, assetId: string, referenceId: string) {
+    return request<{ ok: true }>(`/api/campaigns/${campaignId}/media/${assetId}/references/${referenceId}`, { method: 'DELETE' });
+  },
+
+  updateReference(campaignId: string, assetId: string, referenceId: string, input: { caption?: string | null; position?: number }) {
+    return request(`/api/campaigns/${campaignId}/media/${assetId}/references/${referenceId}`, { method: 'PATCH', body: JSON.stringify(input) });
+  },
+
+  reorderGallery(campaignId: string, fileId: string, referenceIds: string[]) {
+    return request(`/api/campaigns/${campaignId}/media/references/reorder`, { method: 'POST', body: JSON.stringify({ fileId, referenceIds }) });
   }
 };
 

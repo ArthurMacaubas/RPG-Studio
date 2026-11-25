@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element -- authenticated campaign media is delivered by the application route. */
 
 import { Star } from 'lucide-react';
 import { FileTypeIcon } from './fileTypeIcon';
@@ -20,6 +21,7 @@ function formatDate(iso: string) {
 }
 
 export function FileListRow({ file, selected, onOpen, onSelectToggle, onToggleFavorite, onContextMenu }: FileListRowProps) {
+  const image = file.mediaReferences?.find((reference) => reference.purpose === 'PRIMARY')?.asset ?? file.mediaReferences?.find((reference) => reference.purpose === 'COVER')?.asset;
   return (
     <div
       className={`${styles.row} ${selected ? styles.rowSelected : ''}`}
@@ -38,9 +40,7 @@ export function FileListRow({ file, selected, onOpen, onSelectToggle, onToggleFa
         onClick={(e) => e.stopPropagation()}
         onChange={onSelectToggle}
       />
-      <span className={styles.iconCell}>
-        <FileTypeIcon type={file.type} size={15} />
-      </span>
+      <span className={styles.iconCell}>{image ? <img src={`/api/media/${image.id}`} alt="" /> : <FileTypeIcon type={file.type} size={15} />}</span>
       <span className={styles.name}>{file.name}</span>
       <span className={styles.typeCell}>{FILE_TYPE_LABELS[file.type]}</span>
       <span className={styles.dateCell}>{formatDate(file.updatedAt)}</span>

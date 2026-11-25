@@ -10,7 +10,7 @@ function escapeHtml(value: string) {
 
 function safeUrl(value: string) {
   const url = value.trim();
-  return /^(https?:|mailto:|data:image\/)/i.test(url) ? url : '';
+  return /^(https?:|mailto:|data:image\/)/i.test(url) || url.startsWith('/') ? url : '';
 }
 
 function slugify(value: string) {

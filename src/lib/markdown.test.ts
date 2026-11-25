@@ -20,4 +20,10 @@ describe('document markdown renderer', () => {
     expect(html).toContain('id="cena-2"');
     expect(outline.map((item) => item.id)).toEqual(['cena', 'cena-2']);
   });
+
+  it('allows same-origin media delivery URLs while rejecting executable protocols', () => {
+    const html = markdownToHtml('![Mapa](/api/media/asset-1)\n\n[x](javascript:alert(1))');
+    expect(html).toContain('src="/api/media/asset-1"');
+    expect(html).not.toContain('javascript:alert');
+  });
 });

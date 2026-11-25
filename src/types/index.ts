@@ -72,6 +72,40 @@ export interface Attachment {
   createdAt: string;
 }
 
+export type MediaVisibility = 'PRIVATE' | 'PUBLISHED';
+
+export interface MediaReference {
+  id: string;
+  fileId: string;
+  purpose: 'COVER' | 'PRIMARY' | 'CONTENT' | 'GALLERY' | 'MAP' | 'MARKER' | string;
+  position: number;
+  caption: string | null;
+  file?: Pick<CampaignFile, 'id' | 'name' | 'type'>;
+  asset?: Pick<MediaAsset, 'id' | 'displayName' | 'altText' | 'description' | 'width' | 'height'>;
+}
+
+export interface MediaAsset {
+  id: string;
+  campaignId: string;
+  fileName: string;
+  displayName: string;
+  description: string | null;
+  altText: string | null;
+  mimeType: string;
+  byteSize: number;
+  width: number | null;
+  height: number | null;
+  category: string | null;
+  tags: string[];
+  visibility: MediaVisibility;
+  focalX: number | null;
+  focalY: number | null;
+  createdAt: string;
+  updatedAt: string;
+  url: string;
+  references: MediaReference[];
+}
+
 export interface Comment {
   id: string;
   fileId: string;
@@ -156,6 +190,7 @@ export interface CampaignFile {
   updatedAt: string;
   tags?: { tag: Tag }[];
   attachments?: Attachment[];
+  mediaReferences?: MediaReference[];
   comments?: Comment[];
   history?: FileHistoryEntry[];
   relationshipsFrom?: Relationship[];

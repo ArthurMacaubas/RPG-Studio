@@ -25,7 +25,15 @@ const publishedFileSelect = {
   createdAt: true,
   updatedAt: true,
   tags: { select: { tag: { select: { id: true, campaignId: true, name: true, color: true, icon: true, description: true } } } },
-  attachments: { select: { id: true, fileId: true, url: true, label: true, mimeType: true, createdAt: true } }
+  attachments: { select: { id: true, fileId: true, url: true, label: true, mimeType: true, createdAt: true } },
+  mediaReferences: {
+    where: { asset: { visibility: 'PUBLISHED' } },
+    orderBy: { position: 'asc' },
+    select: {
+      id: true, fileId: true, purpose: true, position: true, caption: true,
+      asset: { select: { id: true, displayName: true, altText: true, description: true, width: true, height: true } }
+    }
+  }
 } satisfies Prisma.CampaignFileSelect;
 
 export const publicationSelect = {

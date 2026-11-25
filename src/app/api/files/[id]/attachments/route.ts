@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { fileService } from '@/services/fileService';
 
 const schema = z.object({
-  url: z.string().url(),
+  url: z.string().url().refine((value) => !value.toLowerCase().startsWith('data:'), 'Use a biblioteca de mídia para enviar imagens.'),
   label: z.string().max(120).optional(),
   mimeType: z.string().max(60).optional()
 });
