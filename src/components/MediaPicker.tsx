@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- media URLs are signed-in application routes. */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 import { ImagePlus, LoaderCircle, Search, Upload, X } from 'lucide-react';
 import { mediaApi } from '@/lib/api';
 import { MEDIA_CATEGORIES } from '@/lib/media';
@@ -28,6 +28,29 @@ export function MediaPicker({ campaignId, fileId, purpose = 'CONTENT', replace =
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<MediaAsset | null>(null);
+  const fileInputId = useId();
+  const isMapPicker = purpose === 'MAP';
+  const copy = isMapPicker
+    ? {
+      title: 'Imagem do mapa',
+      description: 'Escolha uma imagem existente ou envie a base visual deste mapa.',
+      upload: 'Enviar imagem do mapa',
+      dropTitle: 'Arraste a imagem do mapa aqui',
+      dropHint: 'ou clique para escolher um arquivo PNG, JPEG, GIF ou WebP',
+      empty: 'Nenhuma imagem na campanha. Envie a imagem que será usada como mapa.',
+      selection: 'Selecione a imagem que será usada como mapa',
+      confirm: 'Usar como mapa'
+    }
+    : {
+      title: 'Biblioteca de mídia',
+      description: 'Reutilize uma imagem ou envie uma nova.',
+      upload: 'Enviar imagem',
+      dropTitle: 'Arraste imagens aqui',
+      dropHint: 'ou clique para escolher PNG, JPEG, GIF ou WebP',
+      empty: 'Nenhuma imagem disponível. Envie a primeira para esta campanha.',
+      selection: 'Selecione uma imagem',
+      confirm: 'Usar imagem'
+    };
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -64,13 +87,16 @@ export function MediaPicker({ campaignId, fileId, purpose = 'CONTENT', replace =
   return <>
     <button type="button" className={styles.trigger} onClick={() => setOpen(true)}><ImagePlus size={14} />{triggerLabel}</button>
     {open && <div className={styles.backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
-      <section className={styles.dialog} role="dialog" aria-modal="true" aria-label="Biblioteca de mídia">
-        <header><div><span>Biblioteca de mídia</span><small>Reutilize uma imagem ou envie uma nova.</small></div><button type="button" onClick={() => setOpen(false)} aria-label="Fechar"><X size={17} /></button></header>
-        <div className={styles.controls}><label><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome ou tag" aria-label="Buscar mídia" /></label><select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filtrar categoria"><option value="">Categorias</option>{MEDIA_CATEGORIES.map((value) => <option key={value} value={value}>{value}</option>)}</select><label className={styles.uploadButton} aria-disabled={uploading}><Upload size={14} />{uploading ? `${progress}%` : 'Enviar'}<input className={styles.fileInput} type="file" accept={IMAGE_FILE_ACCEPT} multiple disabled={uploading} onChange={(event) => { if (event.target.files) void upload(event.target.files); event.target.value = ''; }} /></label></div>
-        {error && <p className={styles.error} role="alert">{error}</p>}
-        <div className={styles.dropzone} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); void upload(event.dataTransfer.files); }}>Arraste imagens aqui · PNG, JPEG, GIF ou WebP</div>
-        <div className={styles.grid}>{loading ? <div className={styles.status}><LoaderCircle className={styles.spinner} size={19} />Carregando…</div> : items.length === 0 ? <div className={styles.status}>Nenhuma imagem disponível. Envie a primeira para esta campanha.</div> : items.map((asset) => <button type="button" key={asset.id} className={`${styles.asset} ${selected?.id === asset.id ? styles.assetSelected : ''}`} onClick={() => setSelected(asset)} onDoubleClick={() => setPreview(asset)}><img src={asset.url} alt={asset.altText || asset.displayName} loading="lazy" /><span>{asset.displayName}</span><small>{asset.width && asset.height ? `${asset.width} × ${asset.height}` : 'Imagem'}</small></button>)}</div>
-        <footer><span>{selected ? selected.displayName : 'Selecione uma imagem'}</span><button type="button" className={styles.confirm} onClick={() => void confirm()} disabled={!selected}>Usar imagem</button></footer>
+      <section className={styles.dialog} role="dialog" aria-modal="true" aria-label={copy.title}>
+        <header><div><span>{copy.title}</span><small>{copy.description}</small></div><button type="button" onClick={() => setOpen(false)} aria-label="Fechar"><X size={17} /></button></header>
+        <div className={styles.uploadArea}>
+          <div className={styles.controls}><label><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome ou tag" aria-label="Buscar mídia" /></label><select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filtrar categoria"><option value="">Categorias</option>{MEDIA_CATEGORIES.map((value) => <option key={value} value={value}>{value}</option>)}</select><label htmlFor={fileInputId} className={styles.uploadButton} aria-disabled={uploading}><Upload size={14} />{uploading ? `${progress}%` : copy.upload}</label></div>
+          {error && <p className={styles.error} role="alert">{error}</p>}
+          <label htmlFor={fileInputId} className={`${styles.dropzone} ${isMapPicker ? styles.mapDropzone : ''}`} aria-disabled={uploading} onDragOver={(event) => { event.preventDefault(); event.stopPropagation(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); void upload(event.dataTransfer.files); }}><Upload size={18} /><strong>{copy.dropTitle}</strong><span>{copy.dropHint}</span></label>
+          <input id={fileInputId} className={styles.fileInput} type="file" accept={IMAGE_FILE_ACCEPT} multiple disabled={uploading} onChange={(event) => { if (event.target.files) void upload(event.target.files); event.target.value = ''; }} />
+        </div>
+        <div className={styles.grid}>{loading ? <div className={styles.status}><LoaderCircle className={styles.spinner} size={19} />Carregando…</div> : items.length === 0 ? <div className={styles.status}>{copy.empty}</div> : items.map((asset) => <button type="button" key={asset.id} className={`${styles.asset} ${selected?.id === asset.id ? styles.assetSelected : ''}`} onClick={() => setSelected(asset)} onDoubleClick={() => setPreview(asset)}><img src={asset.url} alt={asset.altText || asset.displayName} loading="lazy" width={asset.width ?? undefined} height={asset.height ?? undefined} /><span>{asset.displayName}</span><small>{asset.width && asset.height ? `${asset.width} × ${asset.height}` : 'Imagem'}</small></button>)}</div>
+        <footer><span>{selected ? `${selected.displayName} selecionada` : copy.selection}</span><button type="button" className={styles.confirm} onClick={() => void confirm()} disabled={!selected}>{copy.confirm}</button></footer>
       </section>
     </div>}
     <ImageLightbox image={preview ? { url: preview.url, alt: preview.altText || preview.displayName, caption: preview.description || undefined, width: preview.width, height: preview.height } : null} onClose={() => setPreview(null)} />
