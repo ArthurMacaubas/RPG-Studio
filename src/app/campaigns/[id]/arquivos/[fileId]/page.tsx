@@ -37,7 +37,6 @@ import { useDebounce } from '@/hooks/useDebounce';
 import type { CampaignFile, Tag, SystemType, SheetData, ChecklistItem } from '@/types';
 import { FILE_TYPE_LABELS } from '@/types';
 import { markdownOutline, markdownToHtml } from '@/lib/markdown';
-import { DocumentEditor } from '@/components/DocumentEditor';
 import styles from './page.module.css';
 
 const deferredPanelFallback = () => <div style={{ minHeight: 24 }} aria-hidden="true" />;
