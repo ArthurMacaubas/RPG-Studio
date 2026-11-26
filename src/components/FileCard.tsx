@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element -- campaign media is delivered through an authenticated route. */
 
 import { Star, MoreHorizontal } from 'lucide-react';
 import { FileTypeIcon } from './fileTypeIcon';
@@ -17,6 +18,7 @@ interface FileCardProps {
 }
 
 export function FileCard({ file, selected, onOpen, onSelectToggle, onToggleFavorite, onContextMenu }: FileCardProps) {
+  const image = file.mediaReferences?.find((reference) => reference.purpose === 'PRIMARY')?.asset ?? file.mediaReferences?.find((reference) => reference.purpose === 'COVER')?.asset;
   return (
     <div
       className={`${styles.card} ${selected ? styles.cardSelected : ''}`}
@@ -28,6 +30,7 @@ export function FileCard({ file, selected, onOpen, onSelectToggle, onToggleFavor
       draggable
       onDragStart={(e) => e.dataTransfer.setData('text/file-id', file.id)}
     >
+      {image && <div className={styles.image}><img src={`/api/media/${image.id}`} alt={image.altText || image.displayName} loading="lazy" /></div>}
       <div className={styles.topRow}>
         <input
           type="checkbox"

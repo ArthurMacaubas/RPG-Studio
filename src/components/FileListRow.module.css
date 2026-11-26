@@ -3,7 +3,7 @@
 .row:hover { background: var(--color-surface-hover); box-shadow: inset 3px 0 0 var(--color-accent-secondary); }
 .rowSelected { background: var(--color-accent-muted); box-shadow: inset 3px 0 0 var(--color-accent); }
 .checkbox { width: 15px; height: 15px; accent-color: var(--color-accent); }
-.iconCell { display: flex; color: var(--color-accent-secondary); }
+.iconCell { display: flex; width: 28px; height: 28px; align-items: center; justify-content: center; overflow: hidden; border-radius: var(--radius-sm); color: var(--color-accent-secondary); }.iconCell img { width: 100%; height: 100%; object-fit: cover; }
 .name { overflow: hidden; color: var(--color-text); font-size: var(--font-size-body); font-weight: var(--font-weight-semibold); text-overflow: ellipsis; white-space: nowrap; }
 .typeCell, .dateCell { overflow: hidden; color: var(--color-text-faint); font-family: var(--font-mono); font-size: var(--font-size-caption); letter-spacing: .03em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .starButton { display: grid; width: 28px; height: 28px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-text-faint); cursor: pointer; }

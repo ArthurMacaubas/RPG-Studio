@@ -39,6 +39,11 @@ enum FileType {
   LOCATION
 }
 
+enum MediaVisibility {
+  PRIVATE
+  PUBLISHED
+}
+
 enum CombatEncounterStatus {
   NOT_STARTED
   IN_PROGRESS
@@ -130,6 +135,7 @@ model User {
   sentInvites    CampaignInvite[]    @relation("InviteSender")
   fileGrants     CampaignFileGrant[]
   auditEvents    AuditEvent[]        @relation("AuditActor")
+  uploadedMedia  MediaAsset[]        @relation("MediaUploader")
 }
 
 model Campaign {
@@ -170,6 +176,7 @@ model Campaign {
   investigationBoardGroups InvestigationBoardGroup[]
   investigationBoardViews  InvestigationBoardView[]
   briefing                 CampaignBriefing?
+  media                    MediaAsset[]
 
   @@index([ownerId])
 }
@@ -240,10 +247,11 @@ model CampaignFile {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  tags        FileTag[]
-  attachments Attachment[]
-  comments    Comment[]
-  history     FileHistoryEntry[]
+  tags            FileTag[]
+  attachments     Attachment[]
+  mediaReferences MediaReference[]
+  comments        Comment[]
+  history         FileHistoryEntry[]
 
   favoriteEntry FavoriteEntry[]
 
@@ -263,6 +271,54 @@ model CampaignFile {
   @@unique([campaignId, id], name: "CampaignFile_campaignId_id_key")
   @@index([campaignId, type])
   @@index([campaignId, isTrashed])
+}
+
+// Media metadata stays in PostgreSQL while the original bytes remain in object
+// storage. References let one asset be reused by several campaign files.
+model MediaAsset {
+  id              String           @id @default(cuid())
+  campaignId      String
+  campaign        Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  storageProvider String
+  storageKey      String           @unique
+  fileName        String
+  displayName     String
+  description     String?
+  altText         String?
+  mimeType        String
+  byteSize        Int
+  width           Int?
+  height          Int?
+  thumbnailKey    String?
+  focalX          Float?
+  focalY          Float?
+  category        String?
+  tags            String[]         @default([])
+  visibility      MediaVisibility  @default(PRIVATE)
+  createdById     String
+  createdBy       User             @relation("MediaUploader", fields: [createdById], references: [id], onDelete: Restrict)
+  references      MediaReference[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([campaignId, updatedAt])
+  @@index([campaignId, visibility, updatedAt])
+  @@index([campaignId, category, updatedAt])
+}
+
+model MediaReference {
+  id        String       @id @default(cuid())
+  assetId   String
+  asset     MediaAsset   @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  fileId    String
+  file      CampaignFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  purpose   String
+  position  Int          @default(0)
+  caption   String?
+  createdAt DateTime     @default(now())
+
+  @@unique([assetId, fileId, purpose, position])
+  @@index([fileId, purpose, position])
 }
 
 model Attachment {

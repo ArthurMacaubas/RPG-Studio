@@ -70,7 +70,8 @@ export function FileExplorer({ campaignId, scope, fixedType, title, breadcrumb }
   }, [load]);
 
   function openFile(file: CampaignFile) {
-    router.push(`/campaigns/${campaignId}/arquivos/${file.id}` as never);
+    const href = fixedType === 'MAP' ? `/campaigns/${campaignId}/mapa/${file.id}` : `/campaigns/${campaignId}/arquivos/${file.id}`;
+    router.push(href as never);
   }
 
   async function toggleFavorite(file: CampaignFile) {

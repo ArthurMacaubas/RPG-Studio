@@ -198,6 +198,14 @@ altera ou apaga dados. Os scripts `prisma:validate`, `prisma:format`,
 validação repetível. O round-trip V5 preserva `authorId` e remapeia IDs de
 sistemas personalizados durante a importação.
 
+## Mídia, documentos visuais e mapas
+
+A biblioteca de mídia por campanha armazena metadados em PostgreSQL e objetos em Vercel Blob privado, quando configurado. Ela permite upload validado de PNG/JPEG/GIF/WebP, busca, grid/lista, visualização ampliada, visibilidade e reutilização por referências. `MediaAsset` não altera anexos existentes em Base64; a migração desses dados permanece um procedimento futuro e explícito.
+
+Documentos agora podem selecionar capa, imagem principal, conteúdo inserido no editor e galeria sem duplicar o arquivo. O modo leitura abre imagens em lightbox, e a política de publicação exige tanto asset publicado quanto documento acessível ao jogador.
+
+Mapas ganharam visualizador próprio com zoom, pan, tela cheia, camadas, marcadores percentuais e geometrias básicas persistidas no arquivo de mapa. Clustering e carregamento segmentado ainda não foram implementados. Consulte `docs/MEDIA.md`, `docs/DOCUMENT_EDITOR.md` e `docs/MAPS.md` antes de configurar ou evoluir esses fluxos.
+
 ## V9 — Fichas persistentes, imagens e leitura autenticada
 
 A V9 adiciona ferramentas de preparação e leitura sem exigir uma tabela nova para cada sistema: habilidades e inventário continuam versionados no campo JSON da ficha e agora são editáveis individualmente.
@@ -205,7 +213,7 @@ A V9 adiciona ferramentas de preparação e leitura sem exigir uma tabela nova p
 - **Habilidades**: nome, descrição, usos e reordenação por controles acessíveis. A organização muda conforme Ordem Paranormal, D&D 5e ou o sistema personalizado.
 - **Inventário**: nome, descrição, quantidade e reordenação, com persistência no auto-save do arquivo.
 - **Rolagens contextuais**: o botão de dado aparece nas perícias de Ordem Paranormal e D&D 5e e retorna um resultado anunciado por `aria-live`.
-- **Imagens**: `AttachmentsPanel` permite colar URL ou enviar PNG, JPEG, GIF, WebP e SVG de até 5 MB. Os uploads são convertidos em data URL e armazenados como anexos, sem código Prisma nos componentes. O painel de edição mostra miniaturas para personagens, NPCs, locais e mapas; o Modo Jogador também mostra capas e galerias de imagens publicadas.
+- **Imagens**: novos uploads PNG, JPEG, GIF e WebP passam pela biblioteca de mídia e armazenamento de objetos privado; SVG e data URL novos são recusados. `AttachmentsPanel` preserva URLs externas e anexos legados sem migrá-los automaticamente. O painel de edição mostra miniaturas para personagens, NPCs, locais e mapas; o Modo Jogador também mostra capas e galerias de imagens publicadas.
 - **Busca global**: `/api/search` pesquisa campanhas, arquivos, pistas, NPCs, locais, eventos e demais tipos pelo nome, descrição ou conteúdo, respeitando proprietário e membros da campanha.
 - **Compartilhamento autenticado**: `/campaigns/[id]/jogador` exibe a publicação para uma sessão autenticada, complementando o link público `/jogador/[shareSlug]`.
 - **Quadro avançado**: conexões usam curvas Bézier, rótulo padrão sempre visível, controle de curvatura de -180 a 180 e atalhos Esc/Delete. A migration `0003_board_edge_curve` adiciona `BoardEdge.curve` com default zero para dados existentes.
