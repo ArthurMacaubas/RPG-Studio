@@ -1,10 +1,11 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- media is delivered through the authenticated application route. */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Grid2X2, List, LoaderCircle, Pencil, Search, Trash2, Upload, X } from 'lucide-react';
 import { mediaApi } from '@/lib/api';
 import { MEDIA_CATEGORIES } from '@/lib/media';
+import { IMAGE_FILE_ACCEPT, supportedImageFiles } from '@/lib/mediaInput';
 import type { MediaAsset } from '@/types';
 import { ImageLightbox } from './ImageLightbox';
 import styles from './MediaLibrary.module.css';
@@ -28,7 +29,6 @@ export function MediaLibrary({ campaignId }: { campaignId: string }) {
   const [progress, setProgress] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -42,10 +42,14 @@ export function MediaLibrary({ campaignId }: { campaignId: string }) {
   useEffect(() => { const id = window.setTimeout(() => void load(), 200); return () => window.clearTimeout(id); }, [load]);
 
   async function upload(files: FileList | File[]) {
-    if (!files.length) return;
+    const images = supportedImageFiles(files);
+    if (!images.length) {
+      setError('Use imagens PNG, JPEG, GIF ou WebP.');
+      return;
+    }
     setUploading(true); setProgress(0); setError(null);
     try {
-      const result = await mediaApi.upload(campaignId, Array.from(files), { category: category || undefined }, setProgress);
+      const result = await mediaApi.upload(campaignId, images, { category: category || undefined }, setProgress);
       setItems((current) => [...result.items, ...current]);
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível enviar a mídia.'); }
     finally { setUploading(false); }
@@ -111,7 +115,7 @@ export function MediaLibrary({ campaignId }: { campaignId: string }) {
 
   const categories = Array.from(new Set([...MEDIA_CATEGORIES, ...items.map((item) => item.category).filter((value): value is string => Boolean(value))])).sort();
   return <div className={styles.page}>
-    <header className={styles.header}><div><p>Biblioteca de mídia</p><h1>Imagens da campanha</h1><span>Arquivos privados, reutilizáveis e vinculados sem duplicação.</span></div><button type="button" className={styles.uploadButton} onClick={() => inputRef.current?.click()} disabled={uploading || !storageConfigured}><Upload size={15} />{uploading ? `Enviando ${progress}%` : 'Enviar imagens'}</button><input ref={inputRef} className={styles.hidden} type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple onChange={(event) => { if (event.target.files) void upload(event.target.files); event.target.value = ''; }} /></header>
+    <header className={styles.header}><div><p>Biblioteca de mídia</p><h1>Imagens da campanha</h1><span>Arquivos privados, reutilizáveis e vinculados sem duplicação.</span></div><label className={styles.uploadButton} aria-disabled={uploading || !storageConfigured}><Upload size={15} />{uploading ? `Enviando ${progress}%` : 'Enviar imagens'}<input className={styles.fileInput} type="file" accept={IMAGE_FILE_ACCEPT} multiple disabled={uploading || !storageConfigured} onChange={(event) => { if (event.target.files) void upload(event.target.files); event.target.value = ''; }} /></label></header>
     {!storageConfigured && <p className={styles.notice}>O Blob Store privado não está configurado. A biblioteca permanece acessível; defina <code>BLOB_READ_WRITE_TOKEN</code> para habilitar uploads.</p>}
     <div className={styles.toolbar} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); void upload(event.dataTransfer.files); }}><label className={styles.search}><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome ou tag" /></label><select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filtrar por categoria"><option value="">Todas as categorias</option>{categories.map((value) => <option key={value} value={value}>{value}</option>)}</select><select value={mimeType} onChange={(event) => setMimeType(event.target.value)} aria-label="Filtrar por formato"><option value="">Todos os formatos</option><option value="image/png">PNG</option><option value="image/jpeg">JPEG</option><option value="image/gif">GIF</option><option value="image/webp">WebP</option></select><select value={sort} onChange={(event) => setSort(event.target.value as typeof sort)} aria-label="Ordenar mídia"><option value="updatedAt">Atualização</option><option value="createdAt">Envio</option><option value="displayName">Nome</option><option value="byteSize">Tamanho</option></select>{selectedIds.size > 0 && <button type="button" className={styles.bulkDelete} onClick={() => void removeSelected()}><Trash2 size={14} />Excluir {selectedIds.size}</button>}<div className={styles.view}><button type="button" className={view === 'grid' ? styles.active : ''} onClick={() => setView('grid')} aria-label="Visualização em grade"><Grid2X2 size={15} /></button><button type="button" className={view === 'list' ? styles.active : ''} onClick={() => setView('list')} aria-label="Visualização em lista"><List size={16} /></button></div></div>
     {error && <p className={styles.error} role="alert">{error}</p>}
